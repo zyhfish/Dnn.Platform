@@ -34,6 +34,7 @@ using DotNetNuke.Entities.Modules;
 using DotNetNuke.Entities.Portals;
 using DotNetNuke.Entities.Tabs;
 using DotNetNuke.Instrumentation;
+using DotNetNuke.Security.Permissions;
 using DotNetNuke.Services.Localization;
 
 #endregion
@@ -210,7 +211,7 @@ namespace DotNetNuke.Services.Cache
             var folderUserCachePrefix = GetCacheKey(string.Format("Folders|{0}|", portalId));
             ClearCacheInternal(folderUserCachePrefix, clearRuntime);
             
-            RemoveFormattedCacheKey(DataCache.FolderPermissionCacheKey, clearRuntime, portalId);
+            PermissionProvider.ResetCacheDependency(portalId, () => RemoveFormattedCacheKey(DataCache.FolderPermissionCacheKey, clearRuntime, portalId));
         }
 
         private void ClearHostCacheInternal(bool clearRuntime)

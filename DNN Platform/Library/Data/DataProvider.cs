@@ -1998,6 +1998,11 @@ namespace DotNetNuke.Data
 			return ExecuteReader("GetFolderPermissionsByPortal", GetNull(portalId));
 		}
 
+        public virtual IDataReader GetFolderPermissionsByPortalAndPath(int portalId, string pathName)
+        {
+            return GetFolderPermissionsByFolderPath(portalId, pathName ?? "", Null.NullInteger);
+        }
+
 		public virtual void UpdateFolderPermission(int FolderPermissionID, int FolderID, int PermissionID, int roleID,
 												   bool AllowAccess, int UserID, int lastModifiedByUserID)
 		{
