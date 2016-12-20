@@ -1,4 +1,4 @@
-﻿#region Copyright
+#region Copyright
 // 
 // DotNetNuke® - http://www.dotnetnuke.com
 // Copyright (c) 2002-2016
@@ -43,5 +43,5 @@ using System.Reflection;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("9.0.0.0")]
-[assembly: AssemblyFileVersion("9.0.0.0")]
+[assembly: AssemblyVersion("9.0.0.1002")]
+[assembly: AssemblyFileVersion("9.0.0.1002")]
