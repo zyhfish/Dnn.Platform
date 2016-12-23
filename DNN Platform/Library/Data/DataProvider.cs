@@ -55,9 +55,9 @@ namespace DotNetNuke.Data
 	{
 		private static readonly ILog Logger = LoggerSource.Instance.GetLogger(typeof(DataProvider));
 
-		#region Shared/Static Methods
+        #region Shared/Static Methods
 
-		public static DataProvider Instance()
+        public static DataProvider Instance()
 		{
 			return ComponentFactory.GetComponent<DataProvider>();
 		}
@@ -140,14 +140,16 @@ namespace DotNetNuke.Data
 
 		#region Private Methods
 
-		private DateTime FixDate(DateTime dateToFix)
+		private static DateTime FixDate(DateTime dateToFix)
 		{
-			//Fix for Sql Dates having a minimum value of 1/1/1753
-			if (dateToFix < SqlDateTime.MinValue.Value)
-			{
-				dateToFix = SqlDateTime.MinValue.Value;
-			}
-			return dateToFix;
+            //Fix for Sql Dates having a minimum value of January 1, 1753
+            // or maximum value of December 31, 9999
+            if (dateToFix <= SqlDateTime.MinValue.Value)
+                dateToFix = SqlDateTime.MinValue.Value.AddDays(1);
+            else if (dateToFix >= SqlDateTime.MaxValue.Value)
+                dateToFix = SqlDateTime.MaxValue.Value.AddDays(-1);
+
+            return dateToFix;
 		}
 
 		private object GetRoleNull(int RoleID)
@@ -167,7 +169,9 @@ namespace DotNetNuke.Data
 
 		public abstract void ExecuteNonQuery(string procedureName, params object[] commandParameters);
 
-		public abstract IDataReader ExecuteReader(string procedureName, params object[] commandParameters);
+        public abstract void BulkInsert(string procedureName, string tableParameterName, DataTable dataTable);
+
+        public abstract IDataReader ExecuteReader(string procedureName, params object[] commandParameters);
 
 		public abstract T ExecuteScalar<T>(string procedureName, params object[] commandParameters);
 
@@ -441,17 +445,17 @@ namespace DotNetNuke.Data
             return ExecuteScalar<string>("GetUnappliedIterations", version);
         }
 
-		#endregion
+        #endregion
 
-		#region Host Settings Methods
+        #region Host Settings Methods
 
-		public virtual void AddHostSetting(string SettingName, string SettingValue, bool SettingIsSecure,
-										   int CreatedByUserID)
-		{
-			ExecuteNonQuery("AddHostSetting", SettingName, SettingValue, SettingIsSecure, CreatedByUserID);
-		}
+        public virtual void AddHostSetting(string SettingName, string SettingValue, bool SettingIsSecure,
+                                           int CreatedByUserID)
+        {
+            ExecuteNonQuery("AddHostSetting", SettingName, SettingValue, SettingIsSecure, CreatedByUserID);
+        }
 
-		public virtual IDataReader GetHostSetting(string SettingName)
+        public virtual IDataReader GetHostSetting(string SettingName)
 		{
 			return ExecuteReader("GetHostSetting", SettingName);
 		}
@@ -779,10 +783,10 @@ namespace DotNetNuke.Data
                                         tab.IsSystem);
         }
 
-		public virtual void AddTabSetting(int TabId, string SettingName, string SettingValue, int createdByUserID)
-		{
-			ExecuteNonQuery("AddTabSetting", TabId, SettingName, SettingValue, createdByUserID);
-		}
+        public virtual void AddTabSetting(int TabId, string SettingName, string SettingValue, int createdByUserID)
+        {
+            ExecuteNonQuery("AddTabSetting", TabId, SettingName, SettingValue, createdByUserID);
+        }
 
         public virtual int AddTabToEnd(TabInfo tab, int createdByUserID)
         {
@@ -847,7 +851,7 @@ namespace DotNetNuke.Data
 			ExecuteNonQuery("DeleteTabVersionDetail", tabVersionDetailId);
 		}
 
-		public virtual void DeleteTranslatedTabs(int tabId, string cultureCode)
+        public virtual void DeleteTranslatedTabs(int tabId, string cultureCode)
 		{
 			ExecuteNonQuery("DeleteTranslatedTabs", tabId, cultureCode);
 		}
@@ -914,7 +918,7 @@ namespace DotNetNuke.Data
 
 		public virtual IDataReader GetTabSettings(int portalId)
 		{
-			return ExecuteReader("GetTabSettings", portalId);
+            return ExecuteReader("GetTabSettings", portalId);
 		}
 
 		public virtual IDataReader GetTabAliasSkins(int portalId)
@@ -1078,12 +1082,12 @@ namespace DotNetNuke.Data
 											createdByUserID);
 		}
 
-		public virtual void AddModuleSetting(int moduleId, string settingName, string settingValue, int createdByUserID)
-		{
-			ExecuteNonQuery("AddModuleSetting", moduleId, settingName, settingValue, createdByUserID);
-		}
+        public virtual void AddModuleSetting(int moduleId, string settingName, string settingValue, int createdByUserID)
+        {
+            ExecuteNonQuery("AddModuleSetting", moduleId, settingName, settingValue, createdByUserID);
+        }
 
-		public virtual void AddTabModule(int TabId, int ModuleId, string ModuleTitle, string Header, string Footer,
+        public virtual void AddTabModule(int TabId, int ModuleId, string ModuleTitle, string Header, string Footer,
 										 int ModuleOrder, string PaneName, int CacheTime, string CacheMethod,
 										 string Alignment, string Color, string Border, string IconFile, int Visibility,
 										 string ContainerSrc, bool DisplayTitle, bool DisplayPrint,
@@ -1123,13 +1127,13 @@ namespace DotNetNuke.Data
 									  createdByUserID);
 		}
 
-		public virtual void AddTabModuleSetting(int tabModuleId, string settingName, string settingValue,
-												int createdByUserID)
-		{
-			ExecuteNonQuery("AddTabModuleSetting", tabModuleId, settingName, settingValue, createdByUserID);
-		}
+        public virtual void AddTabModuleSetting(int tabModuleId, string settingName, string settingValue,
+                                                int createdByUserID)
+        {
+            ExecuteNonQuery("AddTabModuleSetting", tabModuleId, settingName, settingValue, createdByUserID);
+        }
 
-		public virtual void DeleteModule(int moduleId)
+        public virtual void DeleteModule(int moduleId)
 		{
 			ExecuteNonQuery("DeleteModule", moduleId);
 		}
@@ -1159,7 +1163,7 @@ namespace DotNetNuke.Data
 			ExecuteNonQuery("DeleteTabModuleSettings", tabModuleId);
 		}
 
-		public virtual IDataReader GetAllModules()
+        public virtual IDataReader GetAllModules()
 		{
 			return ExecuteReader("GetAllModules");
 		}
@@ -1649,8 +1653,8 @@ namespace DotNetNuke.Data
 											GetNull(endDate),
 											GetNull(contentItemId));
 		}
-
-		public virtual int CountLegacyFiles()
+        
+        public virtual int CountLegacyFiles()
 		{
 			return ExecuteScalar<int>("CountLegacyFiles");
 		}
@@ -1705,31 +1709,31 @@ namespace DotNetNuke.Data
 			return ExecuteReader("GetFiles", folderId, retrieveUnpublishedFiles);
 		}
 
-		/// <summary>
-		/// This is an internal method for communication between DNN business layer and SQL database.
-		/// Do not use in custom modules, please use API (DotNetNuke.Services.FileSystem.FileManager.UpdateFile)
-		/// 
-		/// Stores information about a specific file, stored in DNN filesystem
-		/// calling petapoco method to call the underlying stored procedure "UpdateFile"
-		/// </summary>
-		/// <param name="fileId">ID of the (already existing) file</param>
-		/// <param name="versionGuid">GUID of this file version  (should usually not be modified)</param>
-		/// <param name="fileName">Name of the file in the file system (including extension)</param>
-		/// <param name="extension">File type - should meet extension in FileName</param>
-		/// <param name="size">Size of file (bytes)</param>
-		/// <param name="width">Width of images/video (lazy load: pass Null, might be retrieved by DNN platform on db file sync)</param>
-		/// <param name="height">Height of images/video (lazy load: pass Null, might be retrieved by DNN platform on db file snyc)</param>
-		/// <param name="contentType">MIME type of the file</param>
-		/// <param name="folderId">ID of the folder, the file resides in</param>
-		/// <param name="lastModifiedByUserID">ID of the user, who performed last update of file or file info</param>
-		/// <param name="hash">SHa1 hash of the file content, used for file versioning (lazy load: pass Null, will be generated by DNN platform on db file sync)</param>
-		/// <param name="lastModificationTime">timestamp, when last update of file or file info happened</param>
-		/// <param name="title">Display title of the file - optional (pass Null if not provided)</param>
-		/// <param name="startDate">date and time (server TZ), from which the file should be displayed/accessible (according to folder permission)</param>
-		/// <param name="endDate">date and time (server TZ), until which the file should be displayed/accessible (according to folder permission)</param>
-		/// <param name="enablePublishPeriod">shall startdate/end date be used?</param>
-		/// <param name="contentItemId">ID of the associated contentitem with description etc. (optional)</param>
-		public virtual void UpdateFile(int fileId, Guid versionGuid, string fileName, string extension, long size,
+        /// <summary>
+        /// This is an internal method for communication between DNN business layer and SQL database.
+        /// Do not use in custom modules, please use API (DotNetNuke.Services.FileSystem.FileManager.UpdateFile)
+        /// 
+        /// Stores information about a specific file, stored in DNN filesystem
+        /// calling petapoco method to call the underlying stored procedure "UpdateFile"
+        /// </summary>
+        /// <param name="fileId">ID of the (already existing) file</param>
+        /// <param name="versionGuid">GUID of this file version  (should usually not be modified)</param>
+        /// <param name="fileName">Name of the file in the file system (including extension)</param>
+        /// <param name="extension">File type - should meet extension in FileName</param>
+        /// <param name="size">Size of file (bytes)</param>
+        /// <param name="width">Width of images/video (lazy load: pass Null, might be retrieved by DNN platform on db file sync)</param>
+        /// <param name="height">Height of images/video (lazy load: pass Null, might be retrieved by DNN platform on db file snyc)</param>
+        /// <param name="contentType">MIME type of the file</param>
+        /// <param name="folderId">ID of the folder, the file resides in</param>
+        /// <param name="lastModifiedByUserID">ID of the user, who performed last update of file or file info</param>
+        /// <param name="hash">SHa1 hash of the file content, used for file versioning (lazy load: pass Null, will be generated by DNN platform on db file sync)</param>
+        /// <param name="lastModificationTime">timestamp, when last update of file or file info happened</param>
+        /// <param name="title">Display title of the file - optional (pass Null if not provided)</param>
+        /// <param name="startDate">date and time (server TZ), from which the file should be displayed/accessible (according to folder permission)</param>
+        /// <param name="endDate">date and time (server TZ), until which the file should be displayed/accessible (according to folder permission)</param>
+        /// <param name="enablePublishPeriod">shall startdate/end date be used?</param>
+        /// <param name="contentItemId">ID of the associated contentitem with description etc. (optional)</param>
+        public virtual void UpdateFile(int fileId, Guid versionGuid, string fileName, string extension, long size,
 										int width, int height, string contentType, int folderId,
 										int lastModifiedByUserID, string hash, DateTime lastModificationTime,
 										string title, DateTime startDate, DateTime endDate, bool enablePublishPeriod, int contentItemId)
@@ -1967,7 +1971,7 @@ namespace DotNetNuke.Data
 			return ExecuteReader("GetFolderPermissionsByPortal", GetNull(portalId));
 		}
 
-		public virtual void UpdateFolderPermission(int FolderPermissionID, int FolderID, int PermissionID, int roleID,
+        public virtual void UpdateFolderPermission(int FolderPermissionID, int FolderID, int PermissionID, int roleID,
 												   bool AllowAccess, int UserID, int lastModifiedByUserID)
 		{
 			ExecuteNonQuery("UpdateFolderPermission",
@@ -1980,11 +1984,11 @@ namespace DotNetNuke.Data
 									  lastModifiedByUserID);
 		}
 
-		#endregion
+        #endregion
 
-		#region DesktopModulePermission Methods
+        #region DesktopModulePermission Methods
 
-		public virtual int AddDesktopModulePermission(int portalDesktopModuleID, int permissionID, int roleID,
+        public virtual int AddDesktopModulePermission(int portalDesktopModuleID, int permissionID, int roleID,
 											bool allowAccess, int userID, int createdByUserID)
 		{
 			return ExecuteScalar<int>("AddDesktopModulePermission",
@@ -2251,7 +2255,7 @@ namespace DotNetNuke.Data
 			return ExecuteReader("GetUserByVanityUrl", GetNull(portalId), vanityUrl);
 		}
 
-		public virtual IDataReader GetDisplayNameForUser(int userId, string spaceReplacement)
+        public virtual IDataReader GetDisplayNameForUser(int userId, string spaceReplacement)
 		{
 			return ExecuteReader("GetDisplayNameForUser", userId, spaceReplacement);
 		}
@@ -2343,7 +2347,7 @@ namespace DotNetNuke.Data
 		public virtual void UpdateUser(int userId, int portalID, string firstName, string lastName, bool isSuperUser,
 										string email, string displayName, string vanityUrl, bool updatePassword,
 										bool isApproved, bool refreshRoles, string lastIpAddress, Guid passwordResetToken,
-										DateTime passwordResetExpiration, bool isDeleted, int lastModifiedByUserID)
+                                        DateTime passwordResetExpiration, bool isDeleted, int lastModifiedByUserID)
 		{
 			ExecuteNonQuery("UpdateUser",
 									  userId,
@@ -2435,17 +2439,17 @@ namespace DotNetNuke.Data
 			}
 			foreach (string key in userList.Keys)
 			{
-				if (userList[key] is AnonymousUserInfo)
-				{
-					var user = (AnonymousUserInfo)userList[key];
-					ExecuteNonQuery("UpdateAnonymousUser", user.UserID, user.PortalID, user.TabID, user.LastActiveDate);
-				}
-				else if (userList[key] is OnlineUserInfo)
-				{
-					var user = (OnlineUserInfo)userList[key];
-					ExecuteNonQuery("UpdateOnlineUser", user.UserID, user.PortalID, user.TabID, user.LastActiveDate);
-				}
-			}
+                if (userList[key] is AnonymousUserInfo)
+                {
+                    var user = (AnonymousUserInfo)userList[key];
+                    ExecuteNonQuery("UpdateAnonymousUser", user.UserID, user.PortalID, user.TabID, user.LastActiveDate);
+                }
+                else if (userList[key] is OnlineUserInfo)
+                {
+                    var user = (OnlineUserInfo)userList[key];
+                    ExecuteNonQuery("UpdateOnlineUser", user.UserID, user.PortalID, user.TabID, user.LastActiveDate);
+                }
+            }
 		}
 
 		#endregion
@@ -2602,250 +2606,250 @@ namespace DotNetNuke.Data
 									  LastModifiedByUserID);
 		}
 
-		#endregion
+        #endregion
 
-		#region SiteLog
+        #region SiteLog
 
-		public virtual void AddSiteLog(DateTime dateTime, int portalId, int userId, string referrer, string URL,
-										string userAgent, string userHostAddress, string userHostName, int tabId,
-										int affiliateId)
-		{
-			ExecuteNonQuery("AddSiteLog",
-									  dateTime,
-									  portalId,
-									  GetNull(userId),
-									  GetNull(referrer),
-									  GetNull(URL),
-									  GetNull(userAgent),
-									  GetNull(userHostAddress),
-									  GetNull(userHostName),
-									  GetNull(tabId),
-									  GetNull(affiliateId));
-		}
+        public virtual void AddSiteLog(DateTime dateTime, int portalId, int userId, string referrer, string URL,
+                                        string userAgent, string userHostAddress, string userHostName, int tabId,
+                                        int affiliateId)
+        {
+            ExecuteNonQuery("AddSiteLog",
+                                      dateTime,
+                                      portalId,
+                                      GetNull(userId),
+                                      GetNull(referrer),
+                                      GetNull(URL),
+                                      GetNull(userAgent),
+                                      GetNull(userHostAddress),
+                                      GetNull(userHostName),
+                                      GetNull(tabId),
+                                      GetNull(affiliateId));
+        }
 
-		public virtual void DeleteSiteLog(DateTime dateTime, int portalId)
-		{
-			ExecuteNonQuery("DeleteSiteLog", dateTime, portalId);
-		}
+        public virtual void DeleteSiteLog(DateTime dateTime, int portalId)
+        {
+            ExecuteNonQuery("DeleteSiteLog", dateTime, portalId);
+        }
 
-		public virtual IDataReader GetSiteLog(int portalId, string portalAlias, string reportName, DateTime startDate,
-											DateTime endDate)
-		{
-			return ExecuteReader(reportName, portalId, portalAlias, startDate, endDate);
-		}
+        public virtual IDataReader GetSiteLog(int portalId, string portalAlias, string reportName, DateTime startDate,
+                                            DateTime endDate)
+        {
+            return ExecuteReader(reportName, portalId, portalAlias, startDate, endDate);
+        }
 
-		public virtual IDataReader GetSiteLogReports()
-		{
-			return ExecuteReader("GetSiteLogReports");
-		}
+        public virtual IDataReader GetSiteLogReports()
+        {
+            return ExecuteReader("GetSiteLogReports");
+        }
 
-		#endregion
+        #endregion
 
-		#region Vendors
+        #region Vendors
 
-		public virtual int AddVendor(int PortalId, string VendorName, string Unit, string Street, string City,
-									 string Region, string Country, string PostalCode, string Telephone, string Fax,
-									 string Cell, string Email, string Website, string FirstName, string LastName,
-									 string UserName, string LogoFile, string KeyWords, string Authorized)
-		{
-			return ExecuteScalar<int>("AddVendor",
-											GetNull(PortalId),
-											VendorName,
-											Unit,
-											Street,
-											City,
-											Region,
-											Country,
-											PostalCode,
-											Telephone,
-											Fax,
-											Cell,
-											Email,
-											Website,
-											FirstName,
-											LastName,
-											UserName,
-											LogoFile,
-											KeyWords,
-											bool.Parse(Authorized));
-		}
+        public virtual int AddVendor(int PortalId, string VendorName, string Unit, string Street, string City,
+                                     string Region, string Country, string PostalCode, string Telephone, string Fax,
+                                     string Cell, string Email, string Website, string FirstName, string LastName,
+                                     string UserName, string LogoFile, string KeyWords, string Authorized)
+        {
+            return ExecuteScalar<int>("AddVendor",
+                                            GetNull(PortalId),
+                                            VendorName,
+                                            Unit,
+                                            Street,
+                                            City,
+                                            Region,
+                                            Country,
+                                            PostalCode,
+                                            Telephone,
+                                            Fax,
+                                            Cell,
+                                            Email,
+                                            Website,
+                                            FirstName,
+                                            LastName,
+                                            UserName,
+                                            LogoFile,
+                                            KeyWords,
+                                            bool.Parse(Authorized));
+        }
 
-		public virtual void DeleteVendor(int VendorId)
-		{
-			ExecuteNonQuery("DeleteVendor", VendorId);
-		}
+        public virtual void DeleteVendor(int VendorId)
+        {
+            ExecuteNonQuery("DeleteVendor", VendorId);
+        }
 
-		public virtual IDataReader GetVendor(int VendorId, int PortalId)
-		{
-			return ExecuteReader("GetVendor", VendorId, GetNull(PortalId));
-		}
+        public virtual IDataReader GetVendor(int VendorId, int PortalId)
+        {
+            return ExecuteReader("GetVendor", VendorId, GetNull(PortalId));
+        }
 
-		public virtual IDataReader GetVendors(int PortalId, bool UnAuthorized, int PageIndex, int PageSize)
-		{
-			return ExecuteReader("GetVendors", GetNull(PortalId), UnAuthorized, GetNull(PageSize), GetNull(PageIndex));
-		}
+        public virtual IDataReader GetVendors(int PortalId, bool UnAuthorized, int PageIndex, int PageSize)
+        {
+            return ExecuteReader("GetVendors", GetNull(PortalId), UnAuthorized, GetNull(PageSize), GetNull(PageIndex));
+        }
 
-		public virtual IDataReader GetVendorsByEmail(string Filter, int PortalId, int PageIndex, int PageSize)
-		{
-			return ExecuteReader("GetVendorsByEmail", Filter, GetNull(PortalId), GetNull(PageSize), GetNull(PageIndex));
-		}
+        public virtual IDataReader GetVendorsByEmail(string Filter, int PortalId, int PageIndex, int PageSize)
+        {
+            return ExecuteReader("GetVendorsByEmail", Filter, GetNull(PortalId), GetNull(PageSize), GetNull(PageIndex));
+        }
 
-		public virtual IDataReader GetVendorsByName(string Filter, int PortalId, int PageIndex, int PageSize)
-		{
-			return ExecuteReader("GetVendorsByName", Filter, GetNull(PortalId), GetNull(PageSize), GetNull(PageIndex));
-		}
+        public virtual IDataReader GetVendorsByName(string Filter, int PortalId, int PageIndex, int PageSize)
+        {
+            return ExecuteReader("GetVendorsByName", Filter, GetNull(PortalId), GetNull(PageSize), GetNull(PageIndex));
+        }
 
-		public virtual void UpdateVendor(int VendorId, string VendorName, string Unit, string Street, string City,
-										 string Region, string Country, string PostalCode, string Telephone, string Fax,
-										 string Cell, string Email, string Website, string FirstName, string LastName,
-										 string UserName, string LogoFile, string KeyWords, string Authorized)
-		{
-			ExecuteNonQuery("UpdateVendor",
-									  VendorId,
-									  VendorName,
-									  Unit,
-									  Street,
-									  City,
-									  Region,
-									  Country,
-									  PostalCode,
-									  Telephone,
-									  Fax,
-									  Cell,
-									  Email,
-									  Website,
-									  FirstName,
-									  LastName,
-									  UserName,
-									  LogoFile,
-									  KeyWords,
-									  bool.Parse(Authorized));
-		}
+        public virtual void UpdateVendor(int VendorId, string VendorName, string Unit, string Street, string City,
+                                         string Region, string Country, string PostalCode, string Telephone, string Fax,
+                                         string Cell, string Email, string Website, string FirstName, string LastName,
+                                         string UserName, string LogoFile, string KeyWords, string Authorized)
+        {
+            ExecuteNonQuery("UpdateVendor",
+                                      VendorId,
+                                      VendorName,
+                                      Unit,
+                                      Street,
+                                      City,
+                                      Region,
+                                      Country,
+                                      PostalCode,
+                                      Telephone,
+                                      Fax,
+                                      Cell,
+                                      Email,
+                                      Website,
+                                      FirstName,
+                                      LastName,
+                                      UserName,
+                                      LogoFile,
+                                      KeyWords,
+                                      bool.Parse(Authorized));
+        }
 
-		#endregion
+        #endregion
 
-		#region Banners
+        #region Banners
 
-		public virtual int AddBanner(string BannerName, int VendorId, string ImageFile, string URL, int Impressions,
-									 double CPM, DateTime StartDate, DateTime EndDate, string UserName,
-									 int BannerTypeId, string Description, string GroupName, int Criteria, int Width,
-									 int Height)
-		{
-			return ExecuteScalar<int>("AddBanner",
-											BannerName,
-											VendorId,
-											GetNull(ImageFile),
-											GetNull(URL),
-											Impressions,
-											CPM,
-											GetNull(StartDate),
-											GetNull(EndDate),
-											UserName,
-											BannerTypeId,
-											GetNull(Description),
-											GetNull(GroupName),
-											Criteria,
-											Width,
-											Height);
-		}
+        public virtual int AddBanner(string BannerName, int VendorId, string ImageFile, string URL, int Impressions,
+                                     double CPM, DateTime StartDate, DateTime EndDate, string UserName,
+                                     int BannerTypeId, string Description, string GroupName, int Criteria, int Width,
+                                     int Height)
+        {
+            return ExecuteScalar<int>("AddBanner",
+                                            BannerName,
+                                            VendorId,
+                                            GetNull(ImageFile),
+                                            GetNull(URL),
+                                            Impressions,
+                                            CPM,
+                                            GetNull(StartDate),
+                                            GetNull(EndDate),
+                                            UserName,
+                                            BannerTypeId,
+                                            GetNull(Description),
+                                            GetNull(GroupName),
+                                            Criteria,
+                                            Width,
+                                            Height);
+        }
 
-		public virtual void DeleteBanner(int BannerId)
-		{
-			ExecuteNonQuery("DeleteBanner", BannerId);
-		}
+        public virtual void DeleteBanner(int BannerId)
+        {
+            ExecuteNonQuery("DeleteBanner", BannerId);
+        }
 
-		public virtual IDataReader FindBanners(int PortalId, int BannerTypeId, string GroupName)
-		{
-			return ExecuteReader("FindBanners", GetNull(PortalId), GetNull(BannerTypeId), GetNull(GroupName));
-		}
+        public virtual IDataReader FindBanners(int PortalId, int BannerTypeId, string GroupName)
+        {
+            return ExecuteReader("FindBanners", GetNull(PortalId), GetNull(BannerTypeId), GetNull(GroupName));
+        }
 
-		public virtual IDataReader GetBanner(int BannerId)
-		{
-			return ExecuteReader("GetBanner", BannerId);
-		}
+        public virtual IDataReader GetBanner(int BannerId)
+        {
+            return ExecuteReader("GetBanner", BannerId);
+        }
 
-		public virtual DataTable GetBannerGroups(int PortalId)
-		{
-			return Globals.ConvertDataReaderToDataTable(ExecuteReader("GetBannerGroups", GetNull(PortalId)));
-		}
+        public virtual DataTable GetBannerGroups(int PortalId)
+        {
+            return Globals.ConvertDataReaderToDataTable(ExecuteReader("GetBannerGroups", GetNull(PortalId)));
+        }
 
-		public virtual IDataReader GetBanners(int VendorId)
-		{
-			return ExecuteReader("GetBanners", VendorId);
-		}
+        public virtual IDataReader GetBanners(int VendorId)
+        {
+            return ExecuteReader("GetBanners", VendorId);
+        }
 
-		public virtual void UpdateBanner(int BannerId, string BannerName, string ImageFile, string URL, int Impressions,
-										 double CPM, DateTime StartDate, DateTime EndDate, string UserName,
-										 int BannerTypeId, string Description, string GroupName, int Criteria, int Width,
-										 int Height)
-		{
-			ExecuteNonQuery("UpdateBanner",
-									  BannerId,
-									  BannerName,
-									  GetNull(ImageFile),
-									  GetNull(URL),
-									  Impressions,
-									  CPM,
-									  GetNull(StartDate),
-									  GetNull(EndDate),
-									  UserName,
-									  BannerTypeId,
-									  GetNull(Description),
-									  GetNull(GroupName),
-									  Criteria,
-									  Width,
-									  Height);
-		}
+        public virtual void UpdateBanner(int BannerId, string BannerName, string ImageFile, string URL, int Impressions,
+                                         double CPM, DateTime StartDate, DateTime EndDate, string UserName,
+                                         int BannerTypeId, string Description, string GroupName, int Criteria, int Width,
+                                         int Height)
+        {
+            ExecuteNonQuery("UpdateBanner",
+                                      BannerId,
+                                      BannerName,
+                                      GetNull(ImageFile),
+                                      GetNull(URL),
+                                      Impressions,
+                                      CPM,
+                                      GetNull(StartDate),
+                                      GetNull(EndDate),
+                                      UserName,
+                                      BannerTypeId,
+                                      GetNull(Description),
+                                      GetNull(GroupName),
+                                      Criteria,
+                                      Width,
+                                      Height);
+        }
 
-		public virtual void UpdateBannerClickThrough(int BannerId, int VendorId)
-		{
-			ExecuteNonQuery("UpdateBannerClickThrough", BannerId, VendorId);
-		}
+        public virtual void UpdateBannerClickThrough(int BannerId, int VendorId)
+        {
+            ExecuteNonQuery("UpdateBannerClickThrough", BannerId, VendorId);
+        }
 
-		public virtual void UpdateBannerViews(int BannerId, DateTime StartDate, DateTime EndDate)
-		{
-			ExecuteNonQuery("UpdateBannerViews", BannerId, GetNull(StartDate), GetNull(EndDate));
-		}
+        public virtual void UpdateBannerViews(int BannerId, DateTime StartDate, DateTime EndDate)
+        {
+            ExecuteNonQuery("UpdateBannerViews", BannerId, GetNull(StartDate), GetNull(EndDate));
+        }
 
-		#endregion
+        #endregion
 
-		#region Affiliates
+        #region Affiliates
 
-		public virtual int AddAffiliate(int vendorId, DateTime startDate, DateTime endDate, double CPC, double CPA)
-		{
-			return ExecuteScalar<int>("AddAffiliate", vendorId, GetNull(startDate), GetNull(endDate), CPC, CPA);
-		}
+        public virtual int AddAffiliate(int vendorId, DateTime startDate, DateTime endDate, double CPC, double CPA)
+        {
+            return ExecuteScalar<int>("AddAffiliate", vendorId, GetNull(startDate), GetNull(endDate), CPC, CPA);
+        }
 
-		public virtual void DeleteAffiliate(int affiliateId)
-		{
-			ExecuteNonQuery("DeleteAffiliate", affiliateId);
-		}
+        public virtual void DeleteAffiliate(int affiliateId)
+        {
+            ExecuteNonQuery("DeleteAffiliate", affiliateId);
+        }
 
-		public virtual IDataReader GetAffiliate(int affiliateId)
-		{
-			return ExecuteReader("GetAffiliate", affiliateId);
-		}
+        public virtual IDataReader GetAffiliate(int affiliateId)
+        {
+            return ExecuteReader("GetAffiliate", affiliateId);
+        }
 
-		public virtual IDataReader GetAffiliates(int vendorId)
-		{
-			return ExecuteReader("GetAffiliates", vendorId);
-		}
+        public virtual IDataReader GetAffiliates(int vendorId)
+        {
+            return ExecuteReader("GetAffiliates", vendorId);
+        }
 
-		public virtual void UpdateAffiliate(int affiliateId, DateTime startDate, DateTime endDate, double CPC, double CPA)
-		{
-			ExecuteNonQuery("UpdateAffiliate", affiliateId, GetNull(startDate), GetNull(endDate), CPC, CPA);
-		}
+        public virtual void UpdateAffiliate(int affiliateId, DateTime startDate, DateTime endDate, double CPC, double CPA)
+        {
+            ExecuteNonQuery("UpdateAffiliate", affiliateId, GetNull(startDate), GetNull(endDate), CPC, CPA);
+        }
 
-		public virtual void UpdateAffiliateStats(int affiliateId, int clicks, int acquisitions)
-		{
-			ExecuteNonQuery("UpdateAffiliateStats", affiliateId, clicks, acquisitions);
-		}
+        public virtual void UpdateAffiliateStats(int affiliateId, int clicks, int acquisitions)
+        {
+            ExecuteNonQuery("UpdateAffiliateStats", affiliateId, clicks, acquisitions);
+        }
 
-		#endregion
+        #endregion
 
-		#region Skins/Containers
+        #region Skins/Containers
 
-		public virtual int AddSkin(int skinPackageID, string skinSrc)
+        public virtual int AddSkin(int skinPackageID, string skinSrc)
 		{
 			return ExecuteScalar<int>("AddSkin", skinPackageID, skinSrc);
 		}
@@ -3013,23 +3017,23 @@ namespace DotNetNuke.Data
 
 		#region Lists
 
-		public virtual int AddListEntry(string ListName, string Value, string Text, int ParentID, int Level,
+        public virtual int AddListEntry(string ListName, string Value, string Text, int ParentID, int Level,
 										bool EnableSortOrder, int DefinitionID, string Description, int PortalID,
 										bool SystemList,
 										 int CreatedByUserID)
 		{
-			return ExecuteScalar<int>("AddListEntry",
-											ListName,
-											Value,
-											Text,
-											ParentID,
-											Level,
-											EnableSortOrder,
-											DefinitionID,
-											Description,
-											PortalID,
-											SystemList,
-											CreatedByUserID);
+		    return ExecuteScalar<int>("AddListEntry",
+		                                    ListName,
+		                                    Value,
+		                                    Text,
+		                                    ParentID,
+		                                    Level,
+		                                    EnableSortOrder,
+		                                    DefinitionID,
+		                                    Description,
+		                                    PortalID,
+		                                    SystemList,
+		                                    CreatedByUserID);
 		}
 
 		public virtual void DeleteList(string ListName, string ParentKey)
@@ -4385,35 +4389,54 @@ namespace DotNetNuke.Data
 
 		#endregion
 
-		#endregion
+        #region Redirec Display Messages
 
-		#region Obsolete Methods
+        public virtual Guid AddRedirectMessage(int userId, int tabId, string text)
+        {
+            return ExecuteScalar<Guid>("AddRedirectMessage", userId, tabId, text);
+        }
 
-		[Obsolete(
-			"Obsoleted in 6.0.0, the Vendor Classifications feature was never fully implemented and will be removed from the API"
-			)]
-		public virtual IDataReader GetVendorClassifications(int VendorId)
-		{
-			return ExecuteReader("GetVendorClassifications", GetNull(VendorId));
-		}
+        public virtual string GetRedirectMessage(Guid id)
+        {
+            return ExecuteScalar<string>("GetRedirectMessage", id);
+        }
 
-		[Obsolete(
-			"Obsoleted in 6.0.0, the Vendor Classifications feature was never fully implemented and will be removed from the API"
-			)]
-		public virtual void DeleteVendorClassifications(int VendorId)
-		{
-			ExecuteNonQuery("DeleteVendorClassifications", VendorId);
-		}
+        public virtual void DeleteOldRedirectMessage(DateTime cutofDateTime)
+        {
+            ExecuteNonQuery("DeleteOldRedirectMessage", FixDate(cutofDateTime));
+        }
 
-		[Obsolete(
-			"Obsoleted in 6.0.0, the Vendor Classifications feature was never fully implemented and will be removed from the API"
-			)]
-		public virtual int AddVendorClassification(int VendorId, int ClassificationId)
-		{
-			return ExecuteScalar<int>("AddVendorClassification", VendorId, ClassificationId);
-		}
+        #endregion
 
-		[Obsolete(
+        #endregion
+
+        #region Obsolete Methods
+
+        [Obsolete(
+            "Obsoleted in 6.0.0, the Vendor Classifications feature was never fully implemented and will be removed from the API"
+            )]
+        public virtual IDataReader GetVendorClassifications(int VendorId)
+        {
+            return ExecuteReader("GetVendorClassifications", GetNull(VendorId));
+        }
+
+        [Obsolete(
+            "Obsoleted in 6.0.0, the Vendor Classifications feature was never fully implemented and will be removed from the API"
+            )]
+        public virtual void DeleteVendorClassifications(int VendorId)
+        {
+            ExecuteNonQuery("DeleteVendorClassifications", VendorId);
+        }
+
+        [Obsolete(
+            "Obsoleted in 6.0.0, the Vendor Classifications feature was never fully implemented and will be removed from the API"
+            )]
+        public virtual int AddVendorClassification(int VendorId, int ClassificationId)
+        {
+            return ExecuteScalar<int>("AddVendorClassification", VendorId, ClassificationId);
+        }
+
+        [Obsolete(
 			"Deprecated in 7.0.0.  This method is unneccessary.  You can get a reader and convert it to a DataSet.")]
 		public virtual DataSet ExecuteDataSet(string procedureName, params object[] commandParameters)
 		{
