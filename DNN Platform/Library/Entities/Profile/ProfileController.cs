@@ -503,7 +503,8 @@ namespace DotNetNuke.Entities.Profile
         /// -----------------------------------------------------------------------------
         public static void UpdateUserProfile(UserInfo user)
         {
-            if (!user.Profile.IsDirty)
+            var userProfile = user.Profile;
+            if (!userProfile.IsDirty)
             {
                 return;
             }
@@ -512,8 +513,10 @@ namespace DotNetNuke.Entities.Profile
             user.PortalID = portalId;
 
             var oldUser = new UserInfo { UserID = user.UserID, PortalID = user.PortalID};
-            _profileProvider.GetUserProfile(ref oldUser);
-            
+            // the following will reset isDirty flaf for all individual properties of the main "user" variable
+            //_profileProvider.GetUserProfile(ref oldUser);
+
+            user.Profile = userProfile;
             _profileProvider.UpdateUserProfile(user);
 
             //Remove the UserInfo from the Cache, as it has been modified
