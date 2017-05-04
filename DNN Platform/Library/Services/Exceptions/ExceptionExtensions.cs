@@ -15,34 +15,24 @@ namespace DotNetNuke.Services.Exceptions
 
             var sb = new StringBuilder();
 
-            if (!string.IsNullOrEmpty(exc.Message))
-            {
-                sb.AppendLine(exc.Message);
-            }
-
-            if (!string.IsNullOrEmpty(exc.StackTrace))
-            {
-                sb.AppendLine(exc.StackTrace);
-            }
+            AddException(sb, exc);
 
             if (exc.InnerException != null)
             {
-                if (!string.IsNullOrEmpty(exc.InnerException.Message))
-                {
-                    sb.AppendLine(exc.InnerException.Message);
-                }
-
-                if (!string.IsNullOrEmpty(exc.InnerException.StackTrace))
-                {
-                    sb.AppendLine(exc.InnerException.StackTrace);
-                }
+                AddException(sb, exc);
             }
 
-            using (var hasher = new MD5CryptoServiceProvider())
+            using (var hasher = new HMACSHA1())
             {
                 var byteArray = hasher.ComputeHash(Encoding.Unicode.GetBytes(sb.ToString().ToLower()));
                 return Convert.ToBase64String(byteArray);
             }
+        }
+
+        private static void AddException(StringBuilder sb, Exception ex)
+        {
+            if (!string.IsNullOrEmpty(ex.Message)) sb.AppendLine(ex.Message);
+            if (!string.IsNullOrEmpty(ex.StackTrace)) sb.AppendLine(ex.StackTrace);
         }
     }
 }
