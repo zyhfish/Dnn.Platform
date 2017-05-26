@@ -2814,16 +2814,19 @@ namespace DotNetNuke.Entities.Tabs
             if (tabs != null)
             {
                 //Manage Parent Tab
-                if (!Null.IsNull(tab.ParentId))
+                if (!Null.IsNull(tab.ParentId) && tabs.ContainsKey(tab.ParentId))
                 {
                     newnode = tabXml.CreateElement("parent");
                     newnode.InnerXml = HttpContext.Current.Server.HtmlEncode(tabs[tab.ParentId].ToString());
                     tabNode.AppendChild(newnode);
 
                     //save tab as: ParentTabName/CurrentTabName
-                    tabs.Add(tab.TabID, tabs[tab.ParentId] + "/" + tab.TabName);
+                    if (!tabs.ContainsKey(tab.TabID))
+                    {
+                        tabs.Add(tab.TabID, tabs[tab.ParentId] + "/" + tab.TabName);
+                    }
                 }
-                else
+                else if (!tabs.ContainsKey(tab.TabID))
                 {
                     //save tab as: CurrentTabName
                     tabs.Add(tab.TabID, tab.TabName);
