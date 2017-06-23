@@ -32,8 +32,10 @@ using DotNetNuke.Services.Localization;
 
 using System;
 using System.Linq;
+using System.Text;
 using DotNetNuke.Entities.Modules.Definitions;
 using DotNetNuke.Entities.Modules;
+using DotNetNuke.Security;
 using DotNetNuke.Services.Log.EventLog;
 using DotNetNuke.Services.Upgrade;
 
@@ -102,7 +104,11 @@ namespace DotNetNuke.Providers.RadEditorProvider
                             Upgrade.RemoveModule("RadEditor Manager", editorPage.TabName, editorPage.ParentId, false);
                         }
                         break;
-                }
+                    case "09.01.01":
+                        UpdateRadCfgFiles();
+				        UpdateWebConfigFile();
+                        break;
+				}
 			}
 			catch (Exception ex)
 			{
@@ -220,6 +226,97 @@ namespace DotNetNuke.Providers.RadEditorProvider
 	            File.Move(file, newPath);
 	        }
 	    }
-	}
+
+        private static void UpdateRadCfgFiles()
+        {
+            var folder = Path.Combine(Globals.ApplicationMapPath, @"DesktopModules\Admin\RadEditorProvider\ConfigFile");
+            UpdateRadCfgFiles(folder, "*ConfigFile*.xml");
+        }
+
+        private static void UpdateRadCfgFiles(string folder, string mask)
+        {
+            var allowedDocExtensions = "doc|docx|xls|xlsx|ppt|pptx|pdf|txt".Split('|');
+
+            var files = Directory.GetFiles(folder, mask);
+            foreach (var fname in files)
+            {
+                if (fname.Contains(".Original.xml")) continue;
+
+                try
+                {
+                    var doc = new XmlDocument();
+                    doc.Load(fname);
+                    var root = doc.DocumentElement;
+                    var docFilters = root?.SelectNodes("/configuration/property[@name='DocumentsFilters']");
+                    if (docFilters != null)
+                    {
+                        var changed = false;
+                        foreach (XmlNode filter in docFilters)
+                        {
+                            if (filter.InnerText == "*.*")
+                            {
+                                changed = true;
+                                filter.InnerXml = "";
+                                foreach (var extension in allowedDocExtensions)
+                                {
+                                    var node = doc.CreateElement("item");
+                                    node.InnerText = "*." + extension;
+                                    filter.AppendChild(node);
+                                }
+                            }
+                        }
+
+                        if (changed)
+                        {
+                            File.Copy(fname, fname + ".bak.resources", true);
+                            doc.Save(fname);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var xlc = new ExceptionLogController();
+                    xlc.AddLog(ex);
+                }
+            }
+        }
+
+        private static string UpdateWebConfigFile()
+        {
+            const string keyName = "Telerik.AsyncUpload.ConfigurationEncryptionKey";
+            const string defaultValue = "MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUYwMTIzNDU2Nzg5QUJDREVG";
+
+            var strError = "";
+            var currentKey = Config.GetSetting(keyName);
+            if (string.IsNullOrEmpty(currentKey) || defaultValue.Equals(currentKey) || currentKey.Length < 40)
+            {
+                try
+                {
+                    //open the web.config
+                    var xmlConfig = Config.Load();
+
+                    //save the current config file
+                    Config.BackupConfig();
+
+                    //create a random Telerik encryption key and add it under <appSettings>
+                    var newKey = new PortalSecurity().CreateKey(32);
+                    newKey = Convert.ToBase64String(Encoding.ASCII.GetBytes(newKey));
+                    Config.AddAppSetting(xmlConfig, keyName, newKey);
+
+                    //save a copy of the exitsing web.config
+                    var backupFolder = string.Concat(Globals.glbConfigFolder, "Backup_", DateTime.Now.ToString("yyyyMMddHHmm"), "\\");
+                    strError += Config.Save(xmlConfig, backupFolder + "web_.config") + Environment.NewLine;
+
+                    //save the web.config
+                    strError += Config.Save(xmlConfig) + Environment.NewLine;
+                }
+                catch (Exception ex)
+                {
+                    strError += ex.Message;
+                }
+            }
+            return strError;
+        }
+    }
 
 }

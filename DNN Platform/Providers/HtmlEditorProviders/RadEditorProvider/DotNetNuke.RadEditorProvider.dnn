@@ -1,6 +1,6 @@
 ﻿<dotnetnuke type="Package" version="5.0">
   <packages>
-    <package name="DotNetNuke.RadEditorProvider" type="Provider" version="09.00.02">
+    <package name="DotNetNuke.RadEditorProvider" type="Provider" version="09.01.01">
       <friendlyName>RadEditor Manager</friendlyName>
       <description>A module used to configure toolbar items, behavior, and other options used in the DotNetNuke RadEditor Provider.</description>
       <owner>
@@ -49,12 +49,17 @@
             <attributes>
               <businessControllerClass>DotNetNuke.Providers.RadEditorProvider.UpgradeController, DotNetNuke.RadEditorProvider</businessControllerClass>
               <desktopModuleID>[DESKTOPMODULEID]</desktopModuleID>
-              <upgradeVersionsList>06.00.00,07.00.06,07.03.00,07.04.00</upgradeVersionsList>
+              <upgradeVersionsList>06.00.00,07.00.06,07.03.00,07.04.00,09.01.01</upgradeVersionsList>
             </attributes>
           </eventMessage>
         </component>
         <component type="Assembly">
           <assemblies>
+            <assembly>
+              <path>bin</path>
+              <name>Telerik.Web.UI.dll</name>
+              <version>2013.2.717.40</version>
+            </assembly>
             <assembly>
               <path>bin</path>
               <name>DotNetNuke.RadEditorProvider.dll</name>

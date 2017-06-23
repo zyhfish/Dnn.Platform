@@ -70,7 +70,7 @@
     <Reference Include="System.Web.Mobile" />
     <Reference Include="Telerik.Web.UI">
       <HintPath>..\..\..\Components\Telerik\bin\Telerik.Web.UI.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
