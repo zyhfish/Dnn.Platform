@@ -54,7 +54,7 @@ namespace DotNetNuke.Providers.RadEditorProvider
 			base.OnPreRender(e);
 
 			Entities.Users.UserInfo userInfo = Entities.Users.UserController.Instance.GetCurrentUserInfo();
-			if (! Page.IsPostBack && userInfo != null && userInfo.UserID != Null.NullInteger)
+			if (userInfo != null && userInfo.UserID != Null.NullInteger)
 			{
 				//check view permissions - Yes?
 				var portalSettings = PortalController.Instance.GetCurrentPortalSettings();
