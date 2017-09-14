@@ -38,14 +38,16 @@ namespace DotNetNuke.Web.Mvc
     {
         public static readonly Regex MvcServicePath = new Regex(@"DesktopModules/MVC/", RegexOptions.Compiled);
 
-        public void Init(HttpApplication context)
+        static MvcHttpModule()
         {
-            ComponentFactory.RegisterComponentInstance<IModuleExecutionEngine>(new ModuleExecutionEngine());
-
             ViewEngines.Engines.Clear();
             ViewEngines.Engines.Add(new ModuleDelegatingViewEngine());
             ViewEngines.Engines.Add(new RazorViewEngine());
+        }
 
+        public void Init(HttpApplication context)
+        {
+            ComponentFactory.RegisterComponentInstance<IModuleExecutionEngine>(new ModuleExecutionEngine());
             context.BeginRequest += InitDnn;
         }
         private static void InitDnn(object sender, EventArgs e)

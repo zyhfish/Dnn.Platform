@@ -197,9 +197,11 @@ namespace DotNetNuke.Web.Mvc
         {
             try
             {
-                if (_result != null)
+                if (_result == null) return;
+                var mvcString = RenderModule(_result);
+                if (!string.IsNullOrEmpty(Convert.ToString(mvcString)))
                 {
-                    Controls.Add(new LiteralControl(RenderModule(_result).ToString()));
+                    Controls.Add(new LiteralControl(Convert.ToString(mvcString)));
                 }
             }
             catch (Exception exc)
