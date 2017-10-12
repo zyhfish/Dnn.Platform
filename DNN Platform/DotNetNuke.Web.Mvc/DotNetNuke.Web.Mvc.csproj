@@ -128,6 +128,8 @@
     <Compile Include="Framework\ActionResults\IDnnViewResult.cs" />
     <Compile Include="Framework\Controllers\DnnController.cs" />
     <Compile Include="Framework\Controllers\IDnnController.cs" />
+    <Compile Include="Helpers\HtmlRenderActionlExtensions.cs" />
+    <Compile Include="Helpers\HtmlActionlExtensions.cs" />
     <Compile Include="HttpConfigurationExtensions.cs" />
     <Compile Include="HttpContextExtensions.cs" />
     <Compile Include="Routing\HttpRequestExtensions.cs" />
