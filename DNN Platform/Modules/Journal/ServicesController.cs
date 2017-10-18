@@ -124,7 +124,7 @@ namespace DotNetNuke.Modules.Journal
                     UserId = UserInfo.UserID,
                     SocialGroupId = postData.GroupId,
                     ProfileId = postData.ProfileId,
-                    Summary = postData.Text,
+                    Summary = postData.Text ?? "",
                     SecuritySet = postData.SecuritySet
                 };
                 ji.Title = HttpUtility.HtmlDecode(HttpUtility.UrlDecode(ji.Title));
@@ -431,7 +431,7 @@ namespace DotNetNuke.Modules.Journal
         {
             try
             {
-                var comment = HttpUtility.UrlDecode(postData.Comment);
+                var comment = Utilities.RemoveHTML(HttpUtility.UrlDecode(postData.Comment));
                 IDictionary<string, UserInfo> mentionedUsers = new Dictionary<string, UserInfo>();
                 var originalComment = comment;
                 comment = ParseMentions(comment, postData.Mentions, ref mentionedUsers);

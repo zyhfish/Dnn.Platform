@@ -169,8 +169,6 @@ namespace DotNetNuke.Data
 
 		public abstract void ExecuteNonQuery(string procedureName, params object[] commandParameters);
 
-        public abstract void BulkInsert(string procedureName, string tableParameterName, DataTable dataTable);
-
         public abstract IDataReader ExecuteReader(string procedureName, params object[] commandParameters);
 
 		public abstract T ExecuteScalar<T>(string procedureName, params object[] commandParameters);
