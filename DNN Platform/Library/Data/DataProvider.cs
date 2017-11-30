@@ -4413,12 +4413,42 @@ namespace DotNetNuke.Data
 			return ExecuteScalar<int>("AddVendorClassification", VendorId, ClassificationId);
 		}
 
-		[Obsolete(
-			"Deprecated in 7.0.0.  This method is unneccessary.  You can get a reader and convert it to a DataSet.")]
-		public virtual DataSet ExecuteDataSet(string procedureName, params object[] commandParameters)
-		{
-			return Globals.ConvertDataReaderToDataSet(ExecuteReader(procedureName, commandParameters));
-		}
+        #endregion
+
+        #region User Cookies persistence
+
+        public virtual void UpdateAuthCookie(string cookieValue, DateTime utcExpiry, int userId)
+        {
+            ExecuteNonQuery("AuthCookies_Update", cookieValue, FixDate(utcExpiry), userId);
+        }
+
+        public virtual IDataReader FindAuthCookie(string cookieValue)
+        {
+            return ExecuteReader("AuthCookies_Find", cookieValue);
+        }
+
+        public virtual void DeleteAuthCookie(string cookieValue)
+        {
+            ExecuteNonQuery("AuthCookies_DeleteByValue", cookieValue);
+        }
+
+        public virtual void DeleteExpiredAuthCookies(DateTime utcExpiredBefore)
+        {
+            ExecuteNonQuery("AuthCookies_DeleteOld", FixDate(utcExpiredBefore));
+        }
+
+        #endregion
+
+        #endregion
+
+        #region Obsolete Methods
+
+        [Obsolete(
+            "Deprecated in 7.0.0.  This method is unneccessary.  You can get a reader and convert it to a DataSet.")]
+        public virtual DataSet ExecuteDataSet(string procedureName, params object[] commandParameters)
+        {
+            return Globals.ConvertDataReaderToDataSet(ExecuteReader(procedureName, commandParameters));
+        }
 
 		[Obsolete("Deprecated in 7.0.0.  This method is unneccessary.  Use the generic version ExecuteScalar<T>.")]
 		public virtual object ExecuteScalar(string procedureName, params object[] commandParameters)
