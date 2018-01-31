@@ -194,6 +194,29 @@ namespace DotNetNuke.Modules.Admin.Tabs
             {
                 ShowPermissions(true);
             }
+
+            if (parentTab != null && PortalSettings.ContentLocalizationEnabled)
+            {
+                var defaultCultureCode = LocaleController.Instance.GetDefaultLocale(PortalId).Code;
+                if (!parentTab.IsNeutralCulture
+                    && (
+                            (!parentTab.CultureCode.Equals(defaultCultureCode, StringComparison.InvariantCultureIgnoreCase)
+                                && parentTab.DefaultLanguageTab == null)
+                             || (parentTab.CultureCode.Equals(defaultCultureCode, StringComparison.InvariantCultureIgnoreCase)
+                                    && parentTab.LocalizedTabs.Count == 0)
+                       ))
+                {
+                    cultureTypeList.Items[0].Enabled = cultureTypeList.Items[2].Enabled = false;
+                    cultureTypeList.Items[1].Enabled = true;
+                    cultureTypeList.SelectedValue = "Culture";
+                }
+                else
+                {
+                    cultureTypeList.Items[0].Enabled = 
+                        cultureTypeList.Items[1].Enabled = cultureTypeList.Items[2].Enabled = true;
+                    cultureTypeList.SelectedValue = PortalController.GetPortalSetting("CreateNewPageCultureType", PortalId, "Localized");
+                }
+            }
         }
 
         private void BindLocalization(bool rebind)
