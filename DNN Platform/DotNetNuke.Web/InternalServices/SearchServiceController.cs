@@ -2,7 +2,7 @@
 
 // 
 // DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2017
+// Copyright (c) 2002-2018
 // by DotNetNuke Corporation
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -28,6 +28,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Web;
 using System.Web.Caching;
 using System.Web.Http;
 
@@ -265,13 +266,16 @@ namespace DotNetNuke.Web.InternalServices
                 }
             }
 
+            var showFriendlyTitle = ActiveModule == null
+                                    || !ActiveModule.ModuleSettings.ContainsKey("ShowFriendlyTitle")
+                                    || Convert.ToBoolean(ActiveModule.ModuleSettings["ShowFriendlyTitle"]);
             foreach (var results in tabGroups.Values)
             {
                 var group = new GroupedDetailView();
 
                 //first entry
                 var first = results[0];
-                group.Title = first.Title;
+                group.Title = showFriendlyTitle ? GetFriendlyTitle(first) : first.Title;
                 group.DocumentUrl = first.Url;
 
                 //Find a different title for multiple entries with same url
@@ -281,7 +285,7 @@ namespace DotNetNuke.Web.InternalServices
                     {
                         var tab = TabController.Instance.GetTab(first.TabId, first.PortalId, false);
                         if (tab != null)
-                            group.Title = tab.TabName;
+                            group.Title = showFriendlyTitle && !string.IsNullOrEmpty(tab.Title) ? tab.Title : tab.TabName;
                     }
                     else if (first.ModuleId > 0)
                     {
@@ -306,9 +310,10 @@ namespace DotNetNuke.Web.InternalServices
 
                 foreach (var result in results)
                 {
+                    var title = showFriendlyTitle ? GetFriendlyTitle(result) : result.Title;
                     var detail = new DetailedView
                     {
-                        Title = result.Title,
+                        Title = title.Contains("<") ? HttpUtility.HtmlEncode(title) : title,
                         DocumentTypeName = InternalSearchController.Instance.GetSearchDocumentTypeDisplayName(result),
                         DocumentUrl = result.Url,
                         Snippet = result.Snippet,
@@ -325,6 +330,16 @@ namespace DotNetNuke.Web.InternalServices
             }
 
             return groups;
+        }
+
+        private string GetFriendlyTitle(SearchResult result)
+        {
+            if (result.Keywords.ContainsKey("title") && !string.IsNullOrEmpty(result.Keywords["title"]))
+            {
+                return result.Keywords["title"];
+            }
+
+            return result.Title;
         }
 
         internal List<GroupedBasicView> GetGroupedBasicViews(SearchQuery query, SearchContentSource userSearchSource, int portalId)
@@ -356,7 +371,7 @@ namespace DotNetNuke.Web.InternalServices
                     if (!groupedResult.Results.Any(r => string.Equals(r.DocumentUrl, preview.DocumentUrl)))
                         groupedResult.Results.Add(new BasicView
                         {
-                            Title = preview.Title,
+                            Title = preview.Title.Contains("<") ? HttpUtility.HtmlEncode(preview.Title) : preview.Title,
                             Snippet = preview.Snippet,
                             Description = preview.Description,
                             DocumentUrl = preview.DocumentUrl,
@@ -421,7 +436,9 @@ namespace DotNetNuke.Web.InternalServices
             var moduleInfo = ModuleController.Instance.GetModule(moduleId, Null.NullInteger, true);
             if (moduleInfo != null)
             {
-                return moduleInfo.ParentTab.TabName;
+                var tab = moduleInfo.ParentTab;
+
+                return !string.IsNullOrEmpty(tab.Title) ? tab.Title : tab.TabName;
             }
 
             return string.Empty;
