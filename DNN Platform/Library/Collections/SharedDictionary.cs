@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 #endregion
@@ -31,7 +32,8 @@ namespace DotNetNuke.Collections.Internal
     [Serializable]
     public class SharedDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDisposable
     {
-        private IDictionary<TKey, TValue> _dict;
+        // private IDictionary<TKey, TValue> _dict;
+        private ConcurrentDictionary<TKey, TValue> _dict;
 
         private bool _isDisposed;
         private ILockStrategy _lockController;
@@ -42,7 +44,7 @@ namespace DotNetNuke.Collections.Internal
 
         public SharedDictionary(ILockStrategy lockStrategy)
         {
-            _dict = new Dictionary<TKey, TValue>();
+            _dict = new ConcurrentDictionary<TKey, TValue>();
             _lockController = lockStrategy;
         }
 
@@ -74,7 +76,7 @@ namespace DotNetNuke.Collections.Internal
         {
             EnsureNotDisposed();
             EnsureWriteAccess();
-            _dict.Add(item);
+            _dict.TryAdd(item.Key, item.Value);
         }
 
         public void Clear()
@@ -88,21 +90,22 @@ namespace DotNetNuke.Collections.Internal
         {
             EnsureNotDisposed();
             EnsureReadAccess();
-            return _dict.Contains(item);
+            return _dict.ContainsKey(item.Key);
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
             EnsureNotDisposed();
             EnsureReadAccess();
-            _dict.CopyTo(array, arrayIndex);
+            _dict.ToArray().CopyTo(array, arrayIndex);
         }
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
             EnsureNotDisposed();
             EnsureWriteAccess();
-            return _dict.Remove(item);
+            TValue value;
+            return _dict.TryRemove(item.Key, out value);
         }
 
         public int Count
@@ -121,7 +124,16 @@ namespace DotNetNuke.Collections.Internal
             {
                 EnsureNotDisposed();
                 EnsureReadAccess();
-                return _dict.IsReadOnly;
+                /**
+                 * Kept only for compatibility
+                 * even if it was uselss.
+                 * Actually we don't have control over 
+                 * readability of the _dict instance, since
+                 * the Dictionary class is instatiated in the 
+                 * constructor as ReadWrite.
+                 * Actually it is alwyas false
+                 */
+                return false; // _dict.IsReadOnly;
             }
         }
 
@@ -136,14 +148,15 @@ namespace DotNetNuke.Collections.Internal
         {
             EnsureNotDisposed();
             EnsureWriteAccess();
-            _dict.Add(key, value);
+            _dict.TryAdd(key, value);
         }
 
         public bool Remove(TKey key)
         {
             EnsureNotDisposed();
             EnsureWriteAccess();
-            return _dict.Remove(key);
+            TValue value;
+            return _dict.TryRemove(key, out value);
         }
 
         public bool TryGetValue(TKey key, out TValue value)
