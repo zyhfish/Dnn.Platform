@@ -30,9 +30,8 @@ using System.Collections.Generic;
 namespace DotNetNuke.Collections.Internal
 {
     [Serializable]
-    public class SharedDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDisposable
+    public class SharedDictionary<TKey, TValue> : IDictionary<TKey, TValue>
     {
-        // private IDictionary<TKey, TValue> _dict;
         private ConcurrentDictionary<TKey, TValue> _dict;
 
         private bool _isDisposed;
@@ -74,36 +73,30 @@ namespace DotNetNuke.Collections.Internal
 
         public void Add(KeyValuePair<TKey, TValue> item)
         {
-            EnsureNotDisposed();
-            EnsureWriteAccess();
             _dict.TryAdd(item.Key, item.Value);
         }
 
         public void Clear()
         {
-            EnsureNotDisposed();
-            EnsureWriteAccess();
             _dict.Clear();
         }
 
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            EnsureNotDisposed();
-            EnsureReadAccess();
+            
+            
             return _dict.ContainsKey(item.Key);
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            EnsureNotDisposed();
-            EnsureReadAccess();
+            
+            
             _dict.ToArray().CopyTo(array, arrayIndex);
         }
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            EnsureNotDisposed();
-            EnsureWriteAccess();
             TValue value;
             return _dict.TryRemove(item.Key, out value);
         }
@@ -112,8 +105,6 @@ namespace DotNetNuke.Collections.Internal
         {
             get
             {
-                EnsureNotDisposed();
-                EnsureReadAccess();
                 return _dict.Count;
             }
         }
@@ -122,8 +113,6 @@ namespace DotNetNuke.Collections.Internal
         {
             get
             {
-                EnsureNotDisposed();
-                EnsureReadAccess();
                 /**
                  * Kept only for compatibility
                  * even if it was uselss.
@@ -139,30 +128,22 @@ namespace DotNetNuke.Collections.Internal
 
         public bool ContainsKey(TKey key)
         {
-            EnsureNotDisposed();
-            EnsureReadAccess();
             return _dict.ContainsKey(key);
         }
 
         public void Add(TKey key, TValue value)
         {
-            EnsureNotDisposed();
-            EnsureWriteAccess();
             _dict.TryAdd(key, value);
         }
 
         public bool Remove(TKey key)
         {
-            EnsureNotDisposed();
-            EnsureWriteAccess();
             TValue value;
             return _dict.TryRemove(key, out value);
         }
 
         public bool TryGetValue(TKey key, out TValue value)
         {
-            EnsureNotDisposed();
-            EnsureReadAccess();
             return _dict.TryGetValue(key, out value);
         }
 
@@ -170,15 +151,13 @@ namespace DotNetNuke.Collections.Internal
         {
             get
             {
-                EnsureNotDisposed();
-                EnsureReadAccess();
-                return _dict[key];
+                TValue value;
+                _dict.TryGetValue(key, out value);
+                return value;
             }
             set
             {
-                EnsureNotDisposed();
-                EnsureWriteAccess();
-                _dict[key] = value;
+                _dict.TryAdd(key, value);
             }
         }
 
@@ -186,8 +165,6 @@ namespace DotNetNuke.Collections.Internal
         {
             get
             {
-                EnsureNotDisposed();
-                EnsureReadAccess();
                 return _dict.Keys;
             }
         }
@@ -196,25 +173,12 @@ namespace DotNetNuke.Collections.Internal
         {
             get
             {
-                EnsureNotDisposed();
-                EnsureReadAccess();
                 return _dict.Values;
             }
         }
 
         #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            Dispose(true);
-
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
-
+        
         public ISharedCollectionLock GetReadLock()
         {
             return GetReadLock(TimeSpan.FromMilliseconds(-1));
@@ -222,7 +186,7 @@ namespace DotNetNuke.Collections.Internal
 
         public ISharedCollectionLock GetReadLock(TimeSpan timeOut)
         {
-            EnsureNotDisposed();
+            
             return _lockController.GetReadLock(timeOut);
         }
 
@@ -238,7 +202,7 @@ namespace DotNetNuke.Collections.Internal
 
         public ISharedCollectionLock GetWriteLock(TimeSpan timeOut)
         {
-            EnsureNotDisposed();
+            
             return _lockController.GetWriteLock(timeOut);
         }
 
@@ -246,61 +210,12 @@ namespace DotNetNuke.Collections.Internal
         {
             return GetWriteLock(TimeSpan.FromMilliseconds(millisecondTimeout));
         }
-
-
-        private void EnsureReadAccess()
-        {
-            if (!(_lockController.ThreadCanRead))
-            {
-                throw new ReadLockRequiredException();
-            }
-        }
-
-        private void EnsureWriteAccess()
-        {
-            if (!_lockController.ThreadCanWrite)
-            {
-                throw new WriteLockRequiredException();
-            }
-        }
-
+        
         public IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable_GetEnumerator()
         {
-            EnsureNotDisposed();
-            EnsureReadAccess();
-
             //todo nothing ensures read lock is held for life of enumerator
             return _dict.GetEnumerator();
         }
 
-        private void EnsureNotDisposed()
-        {
-            if (_isDisposed)
-            {
-                throw new ObjectDisposedException("SharedDictionary");
-            }
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_isDisposed)
-            {
-                if (disposing)
-                {
-                    //dispose managed resrources here
-                    _dict = null;
-                }
-
-                //dispose unmanaged resrources here
-                _lockController.Dispose();
-                _lockController = null;
-                _isDisposed = true;
-            }
-        }
-
-        ~SharedDictionary()
-        {
-            Dispose(false);
-        }
     }
 }
