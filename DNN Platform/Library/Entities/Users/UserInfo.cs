@@ -389,6 +389,11 @@ namespace DotNetNuke.Entities.Users
             return string.Empty;
         }
 
+        private string GetMembershipUserId()
+        {
+            return MembershipProvider.Instance().GetProviderUserKey(this)?.Replace("-", string.Empty) ?? string.Empty;
+        }
+
         [Browsable(false)]
         public CacheLevel Cacheability
         {

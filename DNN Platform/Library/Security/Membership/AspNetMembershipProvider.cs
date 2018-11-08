@@ -639,6 +639,20 @@ namespace DotNetNuke.Security.Membership
             return objUserInfo;
         }
 
+        public override string GetProviderUserKey(UserInfo user)
+        {
+            return GetMembershipUser(user).ProviderUserKey?.ToString().Replace("-", string.Empty) ?? string.Empty;
+        }
+        public override UserInfo GetUserByProviderUserKey(int portalId, string providerUserKey)
+        {
+            var userName = GetMembershipUserByUserKey(providerUserKey)?.UserName ?? string.Empty;
+            if (string.IsNullOrEmpty(userName))
+            {
+                return null;
+            }
+            return GetUserByUserName(portalId, userName);
+        }
+
         private static void UpdateUserMembership(UserInfo user)
         {
             var portalSecurity = PortalSecurity.Instance;

@@ -139,10 +139,10 @@ namespace DotNetNuke.Services.Personalization
                     DataProvider.Instance().UpdateProfile(userId, portalId, profileData);
 
                     // remove then re-add the updated one
-                    var cacheKey = string.Format(DataCache.UserPersonalizationCacheKey, portalId, userId);
-                    DataCache.RemoveCache(cacheKey);
-                    CBO.GetCachedObject<string>(new CacheItemArgs(cacheKey,
-                        DataCache.UserPersonalizationCacheTimeout, DataCache.UserPersonalizationCachePriority), _ => profileData);
+                        var cacheKey = string.Format(DataCache.UserPersonalizationCacheKey, portalId, userId);
+                        DataCache.RemoveCache(cacheKey);
+                        CBO.GetCachedObject<string>(new CacheItemArgs(cacheKey,
+                            DataCache.UserPersonalizationCacheTimeout, DataCache.UserPersonalizationCachePriority), _ => profileData);
                 }
                 else
                 {
