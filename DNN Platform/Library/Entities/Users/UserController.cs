@@ -2192,8 +2192,9 @@ namespace DotNetNuke.Entities.Users
 
             int portalId;
             int userId;
+            var userIdString = strings[1];
 
-            if (!int.TryParse(strings[0], out portalId) || !int.TryParse(strings[1], out userId))
+            if (!int.TryParse(strings[0], out portalId) || string.IsNullOrWhiteSpace(userIdString))
             {
                 throw new InvalidVerificationCodeException();
             }
@@ -2219,6 +2220,14 @@ namespace DotNetNuke.Entities.Users
             user.Membership.Approved = true;
             UpdateUser(portalId, user);
             ApproveUser(user);
+        }
+
+        private static UserInfo GetUserByMembershipUserKey(int portalId, string membershipUserKey)
+        {
+            var masterPortalId = GetEffectivePortalId(portalId);
+            var user = MembershipProvider.Instance().GetUserByProviderUserKey(masterPortalId, membershipUserKey);
+            FixMemberPortalId(user, portalId);
+            return user;
         }
 
         #endregion

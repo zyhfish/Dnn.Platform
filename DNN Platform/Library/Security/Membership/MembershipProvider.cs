@@ -114,6 +114,16 @@ namespace DotNetNuke.Security.Membership
             return null;
         }
 
+        public virtual string GetProviderUserKey(UserInfo user)
+        {
+            return null;
+        }
+
+        public virtual UserInfo GetUserByProviderUserKey(int portalId, string providerUserKey)
+        {
+            return null;
+        }
+
         public virtual UserInfo GetUserByPasswordResetToken(int portalId, string resetToken)
         {
             return null;

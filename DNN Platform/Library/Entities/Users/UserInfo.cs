@@ -31,6 +31,7 @@ using DotNetNuke.Entities.Portals;
 using DotNetNuke.Entities.Profile;
 using DotNetNuke.Entities.Users.Social;
 using DotNetNuke.Security;
+using DotNetNuke.Security.Membership;
 using DotNetNuke.Security.Roles;
 using DotNetNuke.Services.Tokens;
 using DotNetNuke.UI.WebControls;
@@ -305,7 +306,7 @@ namespace DotNetNuke.Entities.Users
                         return PropertyAccess.ContentLocked;
                     }
                     var ps = new PortalSecurity();
-                    var code = ps.Encrypt(Config.GetDecryptionkey(), PortalID + "-" + UserID);
+                    var code = ps.EncryptString(PortalID + "-" + GetMembershipUserId(), Config.GetDecryptionkey());
                     return code.Replace("+", ".").Replace("/", "-").Replace("=", "_");
                 case "affiliateid":
                     if (internScope < Scope.SystemMessages)
@@ -387,6 +388,11 @@ namespace DotNetNuke.Entities.Users
             }
             propertyNotFound = true;
             return string.Empty;
+        }
+
+        private string GetMembershipUserId()
+        {
+            return MembershipProvider.Instance().GetProviderUserKey(this)?.Replace("-", string.Empty) ?? string.Empty;
         }
 
         [Browsable(false)]

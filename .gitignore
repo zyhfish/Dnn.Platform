@@ -51,6 +51,7 @@
 # Visual Studio profiler
 *.psess
 *.vsp
+.vs/*
 
 # ReSharper is a .NET coding add-in
 _ReSharper*

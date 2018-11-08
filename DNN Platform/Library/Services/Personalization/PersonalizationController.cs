@@ -127,10 +127,10 @@ namespace DotNetNuke.Services.Personalization
                     DataProvider.Instance().UpdateProfile(userId, portalId, profileData);
 
                     // remove then re-add the updated one
-                    var cacheKey = string.Format(DataCache.UserPersonalizationCacheKey, portalId, userId);
-                    DataCache.RemoveCache(cacheKey);
-                    CBO.GetCachedObject<string>(new CacheItemArgs(cacheKey,
-                        DataCache.UserPersonalizationCacheTimeout, DataCache.UserPersonalizationCachePriority), _ => profileData);
+                        var cacheKey = string.Format(DataCache.UserPersonalizationCacheKey, portalId, userId);
+                        DataCache.RemoveCache(cacheKey);
+                        CBO.GetCachedObject<string>(new CacheItemArgs(cacheKey,
+                            DataCache.UserPersonalizationCacheTimeout, DataCache.UserPersonalizationCachePriority), _ => profileData);
                 }
                 else
                 {
@@ -149,14 +149,22 @@ namespace DotNetNuke.Services.Personalization
             }
         }
 
-        private string EncryptData(string profileData)
+        private static string EncryptData(string profileData)
         {
-            return new PortalSecurity().Encrypt(Config.GetDecryptionkey(), profileData);
+            return new PortalSecurity().Encrypt(GetDecryptionkey(), profileData);
         }
 
-        private string DecryptData(string profileData)
+        private static string DecryptData(string profileData)
         {
-            return new PortalSecurity().Decrypt(Config.GetDecryptionkey(), profileData);
+            return new PortalSecurity().Decrypt(GetDecryptionkey(), profileData);
+        }
+
+        private static string GetDecryptionkey()
+        {
+            var machineKey = Config.GetDecryptionkey();
+            var hostGuid = Host.GUID.Replace("-", string.Empty);
+            var key = (machineKey ?? "") + hostGuid;
+            return new PortalSecurity().Encrypt(key, key);
         }
     }
 }
