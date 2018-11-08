@@ -363,7 +363,12 @@ namespace DotNetNuke.Modules.Admin.Users
 
 		}
 
-		#endregion
+        protected override bool AddUser
+        {
+            get { return true; }
+        }
+
+        #endregion
 
 		#region Private Methods
 

@@ -607,6 +607,14 @@ namespace DotNetNuke.Security.Membership
                                       userName), GetMembershipUserCallBack);
         }
 
+        private static MembershipUser GetMembershipUserByUserKey(string userKey)
+        {
+            return
+                CBO.GetCachedObject<MembershipUser>(
+                    new CacheItemArgs(GetCacheKey(userKey), DataCache.UserCacheTimeOut, DataCache.UserCachePriority,
+                        userKey), GetMembershipUserByUserKeyCallBack);
+        }
+
         private static string GetCacheKey(string userName)
         {
             return String.Format("MembershipUser_{0}", userName);
@@ -619,12 +627,31 @@ namespace DotNetNuke.Security.Membership
             return System.Web.Security.Membership.GetUser(userName);
         }
 
-       
+        private static object GetMembershipUserByUserKeyCallBack(CacheItemArgs cacheItemArgs)
+        {
+            string userKey = cacheItemArgs.ParamList[0].ToString();
+            return System.Web.Security.Membership.GetUser(new Guid(userKey));
+        }
+
         private UserInfo GetUserByAuthToken(int portalId, string userToken, string authType)
         {
             IDataReader dr = _dataProvider.GetUserByAuthToken(portalId, userToken, authType);
             UserInfo objUserInfo = FillUserInfo(portalId, dr, true);
             return objUserInfo;
+        }
+
+        public override string GetProviderUserKey(UserInfo user)
+        {
+            return GetMembershipUser(user).ProviderUserKey?.ToString().Replace("-", string.Empty) ?? string.Empty;
+        }
+        public override UserInfo GetUserByProviderUserKey(int portalId, string providerUserKey)
+        {
+            var userName = GetMembershipUserByUserKey(providerUserKey)?.UserName ?? string.Empty;
+            if (string.IsNullOrEmpty(userName))
+            {
+                return null;
+            }
+            return GetUserByUserName(portalId, userName);
         }
 
         private static void UpdateUserMembership(UserInfo user)

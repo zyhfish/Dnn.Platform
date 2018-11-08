@@ -74,7 +74,7 @@ namespace DotNetNuke.Entities.Modules
         /// <summary>
         /// Gets whether we are in Add User mode
         /// </summary>
-        protected bool AddUser
+        protected virtual bool AddUser
         {
             get
             {
