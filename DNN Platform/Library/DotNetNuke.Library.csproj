@@ -185,6 +185,7 @@
     <Compile Include="Application\AssemblyStatusAttribute.cs" />
     <Compile Include="Application\DotNetNukeContext.cs" />
     <Compile Include="Common\Utilities\CryptographyUtils.cs" />
+    <Compile Include="Common\Utilities\HtmlEntities.cs" />
     <Compile Include="Common\Utilities\RegexUtils.cs" />
     <Compile Include="Data\ControllerBase.cs" />
     <Compile Include="Data\DatabaseConnectionProvider.cs" />

@@ -28,6 +28,7 @@ using System.Web;
 
 using DotNetNuke.Services.Upgrade;
 using System.Collections.Generic;
+using System.Linq;
 
 #endregion
 
@@ -59,7 +60,7 @@ namespace DotNetNuke.Common.Utilities
         private const string PunctuationMatch = "[~!#\\$%\\^&*\\(\\)-+=\\{\\[\\}\\]\\|;:\\x22'<,>\\.\\?\\\\\\t\\r\\v\\f\\n]";
         private static readonly Regex AfterRegEx = new Regex(PunctuationMatch + "\\s", RegexOptions.Compiled);
         private static readonly Regex BeforeRegEx = new Regex("\\s" + PunctuationMatch, RegexOptions.Compiled);
-        private static readonly Regex EntityRegEx = new Regex("&[^;]+;", RegexOptions.Compiled);
+        private static readonly Regex EntityRegEx = new Regex("&([^;]+);", RegexOptions.Compiled);
         private static readonly Regex UrlEncodedRegEx = new Regex("%[0-9A-Fa-f]{2}", RegexOptions.Compiled);
 
         /// -----------------------------------------------------------------------------
@@ -328,7 +329,7 @@ namespace DotNetNuke.Common.Utilities
         /// -----------------------------------------------------------------------------
         public static bool ContainsEntity(string html)
         {
-            return !string.IsNullOrEmpty(html) && EntityRegEx.IsMatch(html);
+            return !string.IsNullOrEmpty(html) && EntityRegEx.Matches(html).Cast<Match>().Any(m => HtmlEntities.IsValid(m.Groups[1].Value));
         }
 
         /// -----------------------------------------------------------------------------
