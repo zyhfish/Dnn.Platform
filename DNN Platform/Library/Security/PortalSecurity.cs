@@ -266,13 +266,28 @@ namespace DotNetNuke.Security
                                       "<form[^>]*>",
                                       "</form[^><]*>",
                                       "onerror",
-                                      "onmouseover",
                                       "javascript:",
                                       "vbscript:",
                                       "unescape",
                                       "alert[\\s(&nbsp;)]*\\([\\s(&nbsp;)]*'?[\\s(&nbsp;)]*[\"(&quot;)]?",
                                       @"eval*.\(",
-                                      "onload"
+                                      "onload",
+                                      "onfocus",
+                                      "onblur",
+                                      "onclick",
+                                      "ondblclick",
+                                      "onchange",
+                                      "onselect",
+                                      "onsubmit",
+                                      "onreset",
+                                      "onkeydown",
+                                      "onkeyup",
+                                      "onkeypress",
+                                      "onmousedown",
+                                      "onmousemove",
+                                      "onmouseout",
+                                      "onmouseover",
+                                      "onmouseup"
                                   };
 
             const RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Singleline;
