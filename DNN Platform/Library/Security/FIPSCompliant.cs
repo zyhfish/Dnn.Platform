@@ -26,6 +26,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using DotNetNuke.Common;
+using DotNetNuke.Instrumentation;
 
 namespace DotNetNuke.Security
 {
@@ -46,6 +47,8 @@ namespace DotNetNuke.Security
     /// </summary>
     public class FIPSCompliant
     {
+        private static readonly ILog Logger = LoggerSource.Instance.GetLogger(typeof(FIPSCompliant));
+
         /// <summary>
         /// uses the AES FIPS-140 compliant algorithm to encrypt a string
         /// </summary>
@@ -93,7 +96,11 @@ namespace DotNetNuke.Security
             Requires.PropertyNotNull("salt", salt);
             // Throw exception if the password or salt are too short  
             if (passPhrase.Length < 8)
-                throw new CryptographicException("Passphrase must be at least 8 characters long.");
+            {
+                Logger.Error($"salt is too small: {salt} at {Environment.StackTrace}");
+                //throw new CryptographicException("Passphrase must be at least 8 characters long.");
+            }
+
             if (salt.Length < 8) throw new CryptographicException("Salt must be at least 8 characters long.");
         }
 

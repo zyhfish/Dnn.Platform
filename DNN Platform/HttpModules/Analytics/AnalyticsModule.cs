@@ -43,7 +43,7 @@ namespace DotNetNuke.HttpModules.Analytics
     /// -----------------------------------------------------------------------------
     public class AnalyticsModule : IHttpModule
     {
-    	private static readonly ILog Logger = LoggerSource.Instance.GetLogger(typeof (AnalyticsModule));
+        private static readonly ILog Logger = LoggerSource.Instance.GetLogger(typeof(AnalyticsModule));
 
         public string ModuleName
         {
@@ -71,24 +71,25 @@ namespace DotNetNuke.HttpModules.Analytics
             try
             {
                 //First check if we are upgrading/installing or if it is a non-page request
-                var app = (HttpApplication) sender;
+                var app = (HttpApplication)sender;
                 var request = app.Request;
 
                 if (!Initialize.ProcessHttpModule(request, false, false)) return;
 
                 if (HttpContext.Current == null) return;
                 var context = HttpContext.Current;
-                
+
                 if (context == null) return;
-                
+
                 var page = context.Handler as CDefault;
                 if (page == null) return;
 
-				page.PreRender += OnPagePreRender;
+                page.PreRender += OnPagePreRender;
+                page.InitComplete += OnPageInitComplete;
             }
             catch (Exception ex)
             {
-                var log = new LogInfo {LogTypeKey = EventLogController.EventLogType.HOST_ALERT.ToString()};
+                var log = new LogInfo { LogTypeKey = EventLogController.EventLogType.HOST_ALERT.ToString() };
                 log.AddProperty("Analytics.AnalyticsModule", "OnPreRequestHandlerExecute");
                 log.AddProperty("ExceptionMessage", ex.Message);
                 LogController.Instance.AddLog(log);
@@ -97,46 +98,93 @@ namespace DotNetNuke.HttpModules.Analytics
             }
         }
 
-		private static void OnPagePreRender(object sender, EventArgs e)
+        private static void OnPageInitComplete(object sender, EventArgs e)
+        {
+            var page = (Page)sender;
+            if (page == null)
+            {
+                return;
+            }
+
+            InjectAnalyticScripts(page, true);
+
+        }
+
+        private static void OnPagePreRender(object sender, EventArgs e)
+        {
+            var page = (Page)sender;
+            if (page == null)
+            {
+                return;
+            }
+
+            InjectAnalyticScripts(page, false);
+        }
+
+        private static AnalyticsEngineBase GetAnalyticsEngine(AnalyticsEngine engine)
+        {
+            if (!string.IsNullOrWhiteSpace(engine.EngineType))
+            {
+                var engineType = Type.GetType(engine.EngineType);
+                if (engineType == null)
+                {
+                    return new GenericAnalyticsEngine();
+                }
+
+                return (AnalyticsEngineBase)Activator.CreateInstance(engineType);
+            }
+
+            return new GenericAnalyticsEngine();
+        }
+
+        private static string GetAnalyticsScript(AnalyticsEngine engine)
+        {
+            var objEngine = GetAnalyticsEngine(engine);
+            if (objEngine == null)
+            {
+                return string.Empty;
+            }
+
+            var script = engine.ScriptTemplate;
+            if (string.IsNullOrWhiteSpace(script))
+            {
+                return string.Empty;
+            }
+
+            return objEngine.RenderScript(script);
+        }
+
+        private static void InjectAnalyticScripts(Page page, bool injectTop)
         {
             try
             {
-                var  analyticsEngines = AnalyticsEngineConfiguration.GetConfig().AnalyticsEngines;
-                if (analyticsEngines == null || analyticsEngines.Count == 0) return;
-                
-                var page = (Page) sender;
-                if (page == null) return;
-                
+                var analyticsEngines = AnalyticsEngineConfiguration.GetConfig().AnalyticsEngines;
+                if (analyticsEngines == null || analyticsEngines.Count == 0)
+                {
+                    return;
+                }
+
                 foreach (AnalyticsEngine engine in analyticsEngines)
                 {
-                    if ((string.IsNullOrEmpty(engine.ElementId))) continue;
-                    
-                    AnalyticsEngineBase objEngine;
-                    if ((!string.IsNullOrEmpty(engine.EngineType)))
+                    if (string.IsNullOrEmpty(engine.ElementId) || engine.InjectTop != injectTop)
                     {
-                        var engineType = Type.GetType(engine.EngineType);
-                        if (engineType == null) 
-                            objEngine = new GenericAnalyticsEngine();
-                        else
-                            objEngine = (AnalyticsEngineBase) Activator.CreateInstance(engineType);
+                        continue;
                     }
-                    else
+
+                    var script = GetAnalyticsScript(engine);
+                    if (string.IsNullOrWhiteSpace(script))
                     {
-                        objEngine = new GenericAnalyticsEngine();
+                        continue;
                     }
-                    if (objEngine == null) continue;
-                        
-                    var script = engine.ScriptTemplate;
-                    if ((string.IsNullOrEmpty(script))) continue;
-                            
-                    script = objEngine.RenderScript(script);
-                    if ((string.IsNullOrEmpty(script))) continue;
 
-                    var element = (HtmlContainerControl) page.FindControl(engine.ElementId);
-                    if (element == null) continue;
+                    var element = (HtmlContainerControl)page.FindControl(engine.ElementId);
+                    if (element == null)
+                    {
+                        continue;
+                    }
 
-                    var scriptControl = new LiteralControl {Text = script};
-                    if (engine.InjectTop)
+                    var scriptControl = new LiteralControl { Text = script };
+                    if (injectTop)
                     {
                         element.Controls.AddAt(0, scriptControl);
                     }
@@ -148,12 +196,11 @@ namespace DotNetNuke.HttpModules.Analytics
             }
             catch (Exception ex)
             {
-                var log = new LogInfo {LogTypeKey = EventLogController.EventLogType.HOST_ALERT.ToString()};
-				log.AddProperty("Analytics.AnalyticsModule", "OnPagePreRender");
+                var log = new LogInfo { LogTypeKey = EventLogController.EventLogType.HOST_ALERT.ToString() };
+                log.AddProperty("Analytics.AnalyticsModule", injectTop ? "OnPageInitComplete" : "OnPagePreRender");
                 log.AddProperty("ExceptionMessage", ex.Message);
                 LogController.Instance.AddLog(log);
                 Logger.Error(ex);
-
             }
         }
     }

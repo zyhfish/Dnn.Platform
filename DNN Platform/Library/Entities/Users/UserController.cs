@@ -41,6 +41,7 @@ using DotNetNuke.Security;
 using DotNetNuke.Security.Membership;
 using DotNetNuke.Security.Permissions;
 using DotNetNuke.Security.Roles;
+using DotNetNuke.Services.Cache;
 using DotNetNuke.Services.FileSystem;
 using DotNetNuke.Services.Localization;
 using DotNetNuke.Services.Log.EventLog;
@@ -241,8 +242,8 @@ namespace DotNetNuke.Entities.Users
         {
             var masterPortalId = GetEffectivePortalId(portalId);
             var cacheKey = string.Format(DataCache.UserLookupCacheKey, masterPortalId);
-            return CBO.GetCachedObject<SharedDictionary<int, string>>(new CacheItemArgs(cacheKey, DataCache.UserLookupCacheTimeOut, 
-                                                            DataCache.UserLookupCachePriority), (c) => new SharedDictionary<int, string>(),true);
+            return CBO.GetCachedObject<SharedDictionary<int, string>>(new CacheItemArgs(cacheKey, DataCache.UserLookupCacheTimeOut,
+                                                            DataCache.UserLookupCachePriority), (c) => new SharedDictionary<int, string>(), true);
         }
 
         internal static Hashtable GetUserSettings(int portalId, Hashtable settings)
@@ -955,7 +956,7 @@ namespace DotNetNuke.Entities.Users
                 user.PasswordResetToken = passwordGuid;
                 UpdateUser(user.PortalID, user);
                 EventLogController.Instance.AddLog(user, PortalController.Instance.GetCurrentPortalSettings(), GetCurrentUserInternal().UserID, "", EventLogController.EventLogType.USER_CREATED);
-                DataCache.ClearPortalCache(portalId, false);
+                CachingProvider.Instance().Remove(string.Format(DataCache.PortalUserCountCacheKey, portalId));
                 if (!user.IsSuperUser)
                 {
                     //autoassign user to portal roles

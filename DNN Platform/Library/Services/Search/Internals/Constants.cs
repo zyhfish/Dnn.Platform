@@ -91,16 +91,16 @@ namespace DotNetNuke.Services.Search.Internals
 
         internal readonly static string[] FieldsNeedAnalysis = { TitleTag, SubjectTag, CommentsTag, AuthorNameTag, StatusTag, CategoryTag };
 
-        internal readonly static string[] KeyWordSearchFields = { TitleTag, 
-                                                                Tag, 
-                                                                DescriptionTag, 
-                                                                BodyTag, 
-                                                                ContentTag, 
+        internal readonly static string[] KeyWordSearchFields = { TitleTag,
+                                                                Tag,
+                                                                DescriptionTag,
+                                                                BodyTag,
+                                                                ContentTag,
                                                                 KeywordsPrefixTag + TitleTag,
                                                                 KeywordsPrefixTag + SubjectTag,
                                                                 KeywordsPrefixTag + CommentsTag,
                                                                 KeywordsPrefixTag + AuthorNameTag};
-        
+
         // search index tokenizers word lengths
         internal const int MinimumMinLen = 1;
         internal const int DefaultMinLen = 3;
@@ -118,6 +118,7 @@ namespace DotNetNuke.Services.Search.Internals
         internal const string SearchLastSuccessIndexName = "Search_LastSuccessfulIndexedOn";
         internal const string SearchOptimizeFlagName = "Search_OptimizeIndex";
         internal const string SearchCustomAnalyzer = "Search_CustomAnalyzer";
+        internal const string SearchRetryTimesKey = "Search_RetryTimes";
 
         // misc.
         internal const string TlsSearchInfo = "TLS_SEARCH_INFO";

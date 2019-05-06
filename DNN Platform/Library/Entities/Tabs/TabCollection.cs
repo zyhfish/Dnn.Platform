@@ -27,6 +27,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Security;
 
+using DotNetNuke.Collections;
 using DotNetNuke.Common.Utilities;
 using DotNetNuke.Entities.Portals;
 using DotNetNuke.Services.Localization;
@@ -42,14 +43,14 @@ namespace DotNetNuke.Entities.Tabs
     [Serializable]
     public class TabCollection : Dictionary<int, TabInfo>
     {
-		//This is used to provide a collection of children
+        //This is used to provide a collection of children
         [NonSerialized]
         private readonly Dictionary<int, List<TabInfo>> _children;
 
         //This is used to return a sorted List
         [NonSerialized]
         private readonly List<TabInfo> _list;
-        
+
         //This is used to provide a culture based set of tabs
         [NonSerialized]
         private readonly Dictionary<String, List<TabInfo>> _localizedTabs;
@@ -121,7 +122,7 @@ namespace DotNetNuke.Entities.Tabs
             if (tab.PortalID == Null.NullInteger || IsLocalizationEnabled(tab.PortalID))
             {
                 AddToLocalizedTabs(tab);
-            }            
+            }
         }
 
         private int AddToChildren(TabInfo tab)
@@ -132,7 +133,7 @@ namespace DotNetNuke.Entities.Tabs
                 childList = new List<TabInfo>();
                 _children.Add(tab.ParentId, childList);
             }
-			
+
             //Add tab to end of child list as children are returned in order
             childList.Add(tab);
             return childList.Count;
@@ -219,7 +220,7 @@ namespace DotNetNuke.Entities.Tabs
 
         public void Add(TabInfo tab)
         {
-			//Call base class to add to base Dictionary
+            //Call base class to add to base Dictionary
             Add(tab.TabID, tab);
 
             //Update all child collections
@@ -259,14 +260,14 @@ namespace DotNetNuke.Entities.Tabs
             return new ArrayList(_list);
         }
 
-		public TabCollection WithCulture(string cultureCode, bool includeNeutral)
-		{
-			return WithCulture(cultureCode, includeNeutral, IsLocalizationEnabled());
-		}
+        public TabCollection WithCulture(string cultureCode, bool includeNeutral)
+        {
+            return WithCulture(cultureCode, includeNeutral, IsLocalizationEnabled());
+        }
         public TabCollection WithCulture(string cultureCode, bool includeNeutral, bool localizationEnabled)
         {
             TabCollection collection;
-			if (localizationEnabled)
+            if (localizationEnabled)
             {
                 if (string.IsNullOrEmpty(cultureCode))
                 {
@@ -283,10 +284,10 @@ namespace DotNetNuke.Entities.Tabs
                     }
                     else
                     {
-                        collection = !includeNeutral 
-                                        ? new TabCollection(from t in tabs 
+                        collection = !includeNeutral
+                                        ? new TabCollection(from t in tabs
                                                             where t.CultureCode.ToLowerInvariant() == cultureCode
-                                                            select t) 
+                                                            select t)
                                         : new TabCollection(tabs);
                     }
                 }
@@ -327,6 +328,41 @@ namespace DotNetNuke.Entities.Tabs
         public TabInfo WithTabName(string tabName)
         {
             return (from t in _list where !string.IsNullOrEmpty(t.TabName) && t.TabName.Equals(tabName, StringComparison.InvariantCultureIgnoreCase) select t).FirstOrDefault();
+        }
+
+        internal void RefreshCache(int tabId, TabInfo updatedTab)
+        {
+            if (ContainsKey(tabId))
+            {
+                if (updatedTab == null) //the tab has been deleted
+                {
+                    Remove(tabId);
+                    _list.RemoveAll(t => t.TabID == tabId);
+                    _localizedTabs.ForEach(kvp =>
+                    {
+                        kvp.Value.RemoveAll(t => t.TabID == tabId);
+                    });
+                    _children.Remove(tabId);
+                }
+                else
+                {
+                    this[tabId] = updatedTab;
+                    var index = _list.FindIndex(t => t.TabID == tabId);
+                    if (index > Null.NullInteger)
+                    {
+                        _list[index] = updatedTab;
+                    }
+
+                    _localizedTabs.ForEach(kvp =>
+                    {
+                        var localizedIndex = kvp.Value.FindIndex(t => t.TabID == tabId);
+                        if (localizedIndex > Null.NullInteger)
+                        {
+                            kvp.Value[localizedIndex] = updatedTab;
+                        }
+                    });
+                }
+            }
         }
 
         #endregion
