@@ -97,11 +97,15 @@ namespace DotNetNuke.Security
             // Throw exception if the password or salt are too short  
             if (passPhrase.Length < 8)
             {
-                Logger.Error($"salt is too small: {salt} at {Environment.StackTrace}");
+                Logger.Error($"passPhrase is too small: {passPhrase} at {Environment.StackTrace}");
                 //throw new CryptographicException("Passphrase must be at least 8 characters long.");
             }
 
-            if (salt.Length < 8) throw new CryptographicException("Salt must be at least 8 characters long.");
+            if (salt.Length < 8)
+            {
+                Logger.Error($"salt is too small: {salt} at {Environment.StackTrace}");
+                //throw new CryptographicException("Salt must be at least 8 characters long.");
+            }
         }
 
         /// <summary>
