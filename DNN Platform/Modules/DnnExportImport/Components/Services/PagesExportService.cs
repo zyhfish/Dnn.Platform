@@ -1539,7 +1539,7 @@ namespace Dnn.ExportImport.Components.Services
 
         private int ExportModulePackage(ExportModule exportModule)
         {
-            if (!_exportedModuleDefinitions.Contains(exportModule.ModuleDefID))
+            if (!_exportedModuleDefinitions.Contains(exportModule.ModuleDefID) && _exportDto.IncludeExtensions)
             {
                 var packageZipFile = $"{Globals.ApplicationMapPath}{Constants.ExportFolder}{_exportImportJob.Directory.TrimEnd('\\', '/')}\\{Constants.ExportZipPackages}";
                 var moduleDefinition = ModuleDefinitionController.GetModuleDefinitionByID(exportModule.ModuleDefID);
@@ -1550,19 +1550,28 @@ namespace Dnn.ExportImport.Components.Services
                 var filePath = InstallerUtil.GetPackageBackupPath(package);
                 if (File.Exists(filePath))
                 {
-                    var offset = Path.GetDirectoryName(filePath)?.Length + 1;
-                    CompressionUtil.AddFileToArchive(filePath, packageZipFile, offset.GetValueOrDefault(0));
-
-                    Repository.CreateItem(new ExportPackage
+                    try
                     {
-                        PackageName = package.Name,
-                        Version = package.Version,
-                        PackageType = package.PackageType,
-                        PackageFileName = InstallerUtil.GetPackageBackupName(package)
-                    }, null);
+                        var offset = Path.GetDirectoryName(filePath)?.Length + 1;
+                        CompressionUtil.AddFileToArchive(filePath, packageZipFile, offset.GetValueOrDefault(0));
 
-                    _exportedModuleDefinitions.Add(exportModule.ModuleDefID);
-                    return 1;
+                        Repository.CreateItem(new ExportPackage
+                        {
+                            PackageName = package.Name,
+                            Version = package.Version,
+                            PackageType = package.PackageType,
+                            PackageFileName = InstallerUtil.GetPackageBackupName(package)
+                        }, null);
+
+                        _exportedModuleDefinitions.Add(exportModule.ModuleDefID);
+                        return 1;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex);
+                        return 0;
+                    }
+                    
                 }
             }
             return 0;
