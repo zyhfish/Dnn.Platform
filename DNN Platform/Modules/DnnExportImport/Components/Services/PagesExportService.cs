@@ -85,6 +85,7 @@ namespace Dnn.ExportImport.Components.Services
         private static readonly ILog Logger = LoggerSource.Instance.GetLogger(typeof(ExportImportEngine));
         private Dictionary<int, int> _partialImportedTabs = new Dictionary<int, int>();
         private Dictionary<int, bool> _searchedParentTabs = new Dictionary<int, bool>();
+        private IList<ImportModuleMapping> _importContentList = new List<ImportModuleMapping>(); // map the exported module and local module.
 
         public override void ExportData(ExportImportJob exportJob, ExportDto exportDto)
         {
@@ -155,7 +156,8 @@ namespace Dnn.ExportImport.Components.Services
             var progressStep = 100.0 / exportedTabs.OrderByDescending(x => x.Id).Count(x => x.Id < _totals.LastProcessedId);
 
             var index = 0;
-            var referenceTabs = new List<int>(); 
+            var referenceTabs = new List<int>();
+            _importContentList.Clear();
             foreach (var otherTab in exportedTabs)
             {
                 if (CheckCancelled(_exportImportJob)) break;
@@ -237,6 +239,8 @@ namespace Dnn.ExportImport.Components.Services
                             }
                             SetPartialImportSettings(otherTab, localTab);
                             _tabController.UpdateTab(localTab);
+
+                            DotNetNuke.Data.DataProvider.Instance().UpdateTabOrder(localTab.TabID, localTab.TabOrder, localTab.ParentId, Null.NullInteger);
                         }
                         catch (Exception ex)
                         {
@@ -284,6 +288,7 @@ namespace Dnn.ExportImport.Components.Services
                     localTab.UniqueId = Guid.NewGuid();
                     SetPartialImportSettings(otherTab, localTab);
                     otherTab.LocalId = localTab.TabID = _tabController.AddTab(localTab);
+                    DotNetNuke.Data.DataProvider.Instance().UpdateTabOrder(localTab.TabID, localTab.TabOrder, localTab.ParentId, Null.NullInteger);
                     localTabs.Add(localTab);
 
                     if (tabType == TabType.Tab && !referenceTabs.Contains(localTab.TabID))
@@ -665,10 +670,14 @@ namespace Dnn.ExportImport.Components.Services
             var exportOrders = BuildModuleOrders(exportedTabModules);
             foreach (var other in exportedTabModules)
             {
-                var locals = localTabModules.Where(
-                    m => m.UniqueId == other.UniqueId ||
-                        (m.ModuleDefinition.FriendlyName == other.FriendlyName &&
-                        m.PaneName == other.PaneName && ModuleOrderMatched(m, other, localOrders, exportOrders) &&m.IsDeleted == other.IsDeleted)).ToList();
+                var locals = new List<ModuleInfo>(localTabModules.Where(m => m.UniqueId == other.UniqueId));
+                if (locals.Count == 0)
+                {
+                    locals = new List<ModuleInfo>(localTabModules.Where(m => m.ModuleDefinition.FriendlyName == other.FriendlyName
+                                                                             && m.PaneName == other.PaneName 
+                                                                             && ModuleOrderMatched(m, other, localOrders, exportOrders) 
+                                                                             && m.IsDeleted == other.IsDeleted)).ToList();
+                }
 
                 var otherModule = exportedModules.FirstOrDefault(m => m.ModuleID == other.ModuleID);
                 if (otherModule == null) continue; // must not happen
@@ -1167,10 +1176,12 @@ namespace Dnn.ExportImport.Components.Services
                                     {
                                         foreach (var moduleContent in exportedContent)
                                         {
-                                            if (!moduleContent.IsRestored)
+                                            if (!moduleContent.IsRestored 
+                                                || !_importContentList.Any(i => i.ExportModuleId == otherModule.ModuleID && i.LocalModuleId == localModule.ModuleID))
                                             {
                                                 try
                                                 {
+                                                    _importContentList.Add(new ImportModuleMapping{ExportModuleId = otherModule.ModuleID, LocalModuleId = localModule.ModuleID});
                                                     var content = moduleContent.XmlContent;
                                                     if (content.IndexOf('\x03') >= 0)
                                                     {
@@ -2052,6 +2063,13 @@ namespace Dnn.ExportImport.Components.Services
 
             public int TotalTabModules { get; set; }
             public int TotalTabModuleSettings { get; set; }
+        }
+
+        private class ImportModuleMapping
+        {
+            public int ExportModuleId { get; set; }
+
+            public int LocalModuleId { get; set; }
         }
         #endregion
     }
