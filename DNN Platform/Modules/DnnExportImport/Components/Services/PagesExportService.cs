@@ -903,7 +903,11 @@ namespace Dnn.ExportImport.Components.Services
                                 }
 
                                 // updates both module and tab module db records
-                                _moduleController.UpdateModule(local);
+                                ActionInWorkflowlessContext(local.TabID, () =>
+                                {
+                                    _moduleController.UpdateModule(local);
+                                });
+                                
                                 other.LocalId = local.TabModuleID;
                                 otherModule.LocalId = localExpModule.ModuleID;
                                 Repository.UpdateItem(otherModule);
@@ -913,13 +917,14 @@ namespace Dnn.ExportImport.Components.Services
                                 if (isDeleted != other.IsDeleted && !otherTab.IsDeleted)
                                 {
                                     local.IsDeleted = other.IsDeleted;
-                                    ActionInWorkflowlessContext(local.TabID, () =>
+                                    if (other.IsDeleted)
                                     {
-                                        if (other.IsDeleted)
-                                            _moduleController.DeleteTabModule(local.TabID, local.ModuleID, true);
-                                        else
-                                            _moduleController.RestoreModule(local);
-                                    });
+                                        _moduleController.DeleteTabModule(local.TabID, local.ModuleID, true);
+                                    }
+                                    else
+                                    {
+                                        _moduleController.RestoreModule(local);
+                                    }
                                 }
                             }
 
