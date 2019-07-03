@@ -863,7 +863,6 @@ namespace Dnn.ExportImport.Components.Services
                                 local.StartDate = otherModule.StartDate ?? DateTime.MinValue;
                                 local.EndDate = otherModule.EndDate ?? DateTime.MaxValue;
                                 local.InheritViewPermissions = otherModule.InheritViewPermissions ?? true;
-                                local.IsDeleted = otherModule.IsDeleted;
                                 local.IsShareable = otherModule.IsShareable;
                                 local.IsShareableViewOnly = otherModule.IsShareableViewOnly;
 
@@ -885,7 +884,6 @@ namespace Dnn.ExportImport.Components.Services
                                 local.DisplayTitle = other.DisplayTitle;
                                 local.DisplayPrint = other.DisplayPrint;
                                 local.DisplaySyndicate = other.DisplaySyndicate;
-                                local.IsDeleted = other.IsDeleted;
                                 local.IsShareable = otherModule.IsShareable;
                                 local.IsShareableViewOnly = otherModule.IsShareableViewOnly;
                                 local.IsWebSlice = other.IsWebSlice;
@@ -896,6 +894,7 @@ namespace Dnn.ExportImport.Components.Services
                                 local.DefaultLanguageGuid = other.DefaultLanguageGuid ?? Guid.Empty;
                                 local.LocalizedVersionGuid = other.LocalizedVersionGuid;
                                 local.CultureCode = other.CultureCode;
+                                local.IsDeleted = false;
                                 if (local.UniqueId != other.UniqueId && !DataProvider.Instance().CheckTabModuleUniqueIdExists(other.UniqueId))
                                 {
                                     local.UniqueId = other.UniqueId;
