@@ -305,8 +305,18 @@ namespace DotNetNuke.Services.FileSystem
             {
                 throw new InvalidFileExtensionException(string.Format(Localization.Localization.GetExceptionMessage("AddFileExtensionNotAllowed", "The extension '{0}' is not allowed. The file has not been added."), Path.GetExtension(fileName)));
             }
-            //DNN-2949 If it is host user and IgnoreWhiteList is set to true , then file should be copied and info logged into Event Viewer
-            if (!IsAllowedExtension(fileName) && UserController.Instance.GetCurrentUserInfo().IsSuperUser && IgnoreWhiteList)
+
+
+            if (!IsValidFilename(fileName))
+            {
+                throw new InvalidFilenameException(
+                    string.Format(
+                        Localization.Localization.GetExceptionMessage("AddFilenameNotAllowed",
+                            "The file name '{0}' is not allowed. The file has not been added."), fileName));
+            }
+
+            //DNN-2949 If IgnoreWhiteList is set to true , then file should be copied and info logged into Event Viewer
+            if (!IsAllowedExtension(fileName) && ignoreWhiteList)
              {
                  var log = new LogInfo {LogTypeKey = EventLogController.EventLogType.HOST_ALERT.ToString()};
                  log.LogProperties.Add(new LogDetailInfo("Following file was imported during portal creation, but is not an authorized filetype: ", fileName));
@@ -1071,6 +1081,11 @@ namespace DotNetNuke.Services.FileSystem
                 throw new InvalidFileExtensionException(string.Format(Localization.Localization.GetExceptionMessage("AddFileExtensionNotAllowed", "The extension '{0}' is not allowed. The file has not been added."), Path.GetExtension(newFileName)));
             }
 
+            if (!IsValidFilename(newFileName))
+            {
+                throw new InvalidFilenameException(string.Format(Localization.Localization.GetExceptionMessage("AddFilenameNotAllowed", "The file name '{0}' is not allowed. The file has not been added."), newFileName));
+            }
+
             var folder = FolderManager.Instance.GetFolder(file.FolderId);
 
             if (FileExists(folder, newFileName))
@@ -1670,6 +1685,13 @@ namespace DotNetNuke.Services.FileSystem
             return !string.IsNullOrEmpty(extension)
                    && Host.AllowedExtensionWhitelist.IsAllowedExtension(extension)
                    && !Regex.IsMatch(fileName, @"\..+;");
+        }
+
+        /// <summary>This member is reserved for internal use and is not intended to be used directly from your code.</summary>
+        internal virtual bool IsValidFilename(string fileName)
+        {
+            //regex ensures the file is a valid filename and doesn't include illegal characters
+            return Globals.FileValidNameRegex.IsMatch(fileName);
         }
 
         /// <summary>This member is reserved for internal use and is not intended to be used directly from your code.</summary>

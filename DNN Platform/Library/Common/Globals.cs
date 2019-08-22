@@ -86,6 +86,16 @@ namespace DotNetNuke.Common
     public sealed class Globals
     {
     	private static readonly ILog Logger = LoggerSource.Instance.GetLogger(typeof (Globals));
+
+        public static readonly Regex EmailValidatorRegex = new Regex(glbEmailRegEx, RegexOptions.Compiled);
+        public static readonly Regex InvalidCharacters = new Regex("[^A-Za-z0-9_-]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        public static readonly Regex InvalidInitialCharacters = new Regex("^[^A-Za-z]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        public static readonly Regex NumberMatchRegex = new Regex(@"^\d+$", RegexOptions.Compiled);
+        public static readonly Regex BaseTagRegex = new Regex("<base[^>]*>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static readonly Regex FileEscapingRegex = new Regex("[\\\\/]\\.\\.[\\\\/]", RegexOptions.Compiled);
+        public static readonly Regex FileExtensionRegex = new Regex(@"\..+;", RegexOptions.Compiled);
+        public static readonly Regex FileValidNameRegex = new Regex(@"^(?!(?:PRN|AUX|CLOCK\$|NUL|CON|COM\d|LPT\d)(?:\..+)?$)[^\x00-\x1F\xA5\\?*:\"";|\/<>]+(?<![\s.])$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        
         #region PerformanceSettings enum
 
         /// <summary>
