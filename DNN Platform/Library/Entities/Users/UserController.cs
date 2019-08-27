@@ -2326,14 +2326,6 @@ namespace DotNetNuke.Entities.Users
             return user;
         }
 
-        private static UserInfo GetUserByMembershipUserKey(int portalId, string membershipUserKey)
-        {
-            var masterPortalId = GetEffectivePortalId(portalId);
-            var user = MembershipProvider.Instance().GetUserByProviderUserKey(masterPortalId, membershipUserKey);
-            FixMemberPortalId(user, portalId);
-            return user;
-        }
-
         #endregion
 
     }
