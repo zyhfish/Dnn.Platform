@@ -27,6 +27,7 @@ using System.Web;
 using DotNetNuke.Common;
 using DotNetNuke.Common.Utilities;
 using DotNetNuke.Data;
+using DotNetNuke.Entities.Host;
 using DotNetNuke.Security;
 
 #endregion
