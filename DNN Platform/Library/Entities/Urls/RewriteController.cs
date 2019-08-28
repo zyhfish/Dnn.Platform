@@ -436,10 +436,11 @@ namespace DotNetNuke.Entities.Urls
 
 		            if (!newUrl.Contains(currentLocale))
 		            {
+			            var portalPath = tabLookUpKey.Split(new[] {"::"}, StringSplitOptions.None)[0];
 			            var tabPath = tabLookUpKey.Split(new[] {"::"}, StringSplitOptions.None)[1];
-			            using (tabDict.GetReadLock())
+                        using (tabDict.GetReadLock())
 			            {
-				            foreach (var key in tabDict.Keys.Where(k => k.EndsWith("::" + tabPath)))
+				            foreach (var key in tabDict.Keys.Where(k => k.EndsWith("::" + tabPath) && k.Contains(portalPath)))
 				            {
 					            if (tabDict[key].Contains("language=" + currentLocale))
 					            {
