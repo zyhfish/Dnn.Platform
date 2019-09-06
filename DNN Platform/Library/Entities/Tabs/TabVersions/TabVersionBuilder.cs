@@ -45,7 +45,6 @@ namespace DotNetNuke.Entities.Tabs.TabVersions
         private readonly ITabVersionSettings _tabVersionSettings;
         private readonly ITabVersionController _tabVersionController;
         private readonly ITabVersionDetailController _tabVersionDetailController;
-        private readonly PortalSettings _portalSettings;
         #endregion
 
         #region Constructor
@@ -56,7 +55,6 @@ namespace DotNetNuke.Entities.Tabs.TabVersions
             _tabVersionSettings = TabVersionSettings.Instance;
             _tabVersionController = TabVersionController.Instance;
             _tabVersionDetailController = TabVersionDetailController.Instance;
-            _portalSettings = PortalSettings.Current;
         }
         #endregion
 
@@ -294,8 +292,8 @@ namespace DotNetNuke.Entities.Tabs.TabVersions
         #region Private Methods
         private IEnumerable<ModuleInfo> GetCurrentModulesInternal(int tabId)
         {
-            var versioningEnabled = _portalSettings != null &&
-                                    _tabVersionSettings.IsVersioningEnabled(_portalSettings.PortalId, tabId);
+            var portalId = GetCurrentPortalId();
+            var versioningEnabled = portalId != Null.NullInteger && _tabVersionSettings.IsVersioningEnabled(portalId, tabId);
             if (!versioningEnabled)
             {
                 return CBO.FillCollection<ModuleInfo>(DataProvider.Instance().GetTabModules(tabId));
@@ -391,7 +389,7 @@ namespace DotNetNuke.Entities.Tabs.TabVersions
             if (versionToDelete.Version == version)
             {
                 var restoreMaxNumberOfVersions = false;
-                var portalId = _portalSettings.PortalId;
+                var portalId = GetCurrentPortalId();
                 var maxNumberOfVersions = _tabVersionSettings.GetMaxNumberOfVersions(portalId);
 
                 // If we already have reached the maxNumberOfVersions we need to extend to 1 this limit to allow the tmp version
@@ -592,7 +590,7 @@ namespace DotNetNuke.Entities.Tabs.TabVersions
 
         private int GetCurrentPortalId()
         {
-            return _portalSettings == null ? Null.NullInteger : _portalSettings.PortalId;
+            return PortalSettings.Current == null ? Null.NullInteger : PortalSettings.Current.PortalId;
         }
 
         private void CreateSnapshotOverVersion(int tabId, TabVersion snapshotTabVersion, TabVersion deletedTabVersion = null)
