@@ -467,7 +467,7 @@ namespace DotNetNuke.Common.Utilities
                             DeleteFilesRecursive(strFolder, filter);
                         }
                     }
-                    foreach (string strFile in Directory.EnumerateFilePaths(new DirectoryInfo(strRoot)).Where(f => f.Contains(filter)))
+                    foreach (string strFile in Directory.EnumerateFilePaths(strRoot).Where(f => f.Contains(filter)))
                     {
                         try
                         {
@@ -495,7 +495,7 @@ namespace DotNetNuke.Common.Utilities
                 DeleteFolderRecursive(strFolder);
             }
 
-            foreach (string strFile in Directory.EnumerateFilePaths(new DirectoryInfo(strRoot)))
+            foreach (string strFile in Directory.EnumerateFilePaths(strRoot))
             {
                 try
                 {
