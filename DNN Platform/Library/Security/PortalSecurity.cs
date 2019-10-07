@@ -34,11 +34,15 @@ using System.Web.Security;
 using DotNetNuke.Common;
 using DotNetNuke.Common.Lists;
 using DotNetNuke.Common.Utilities;
+using DotNetNuke.Data;
 using DotNetNuke.Entities.Controllers;
+using DotNetNuke.Entities.Modules;
 using DotNetNuke.Entities.Portals;
 using DotNetNuke.Entities.Users;
 using DotNetNuke.Entities.Users.Social;
 using DotNetNuke.Security.Cookies;
+using DotNetNuke.Security.Membership;
+using DotNetNuke.Security.Permissions;
 using DotNetNuke.Services.Cryptography;
 // ReSharper disable MemberCanBeMadeStatic.Global
 
