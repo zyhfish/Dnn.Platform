@@ -735,7 +735,7 @@ namespace DotNetNuke.Framework
             if (Request.IsAuthenticated && string.IsNullOrEmpty(Request.QueryString["runningDefault"]) == false)
             {
                 var userInfo = HttpContext.Current.Items["UserInfo"] as UserInfo;
-                var usernameLower = userInfo?.Username?.ToLower();
+                var usernameLower = userInfo != null && !string.IsNullOrWhiteSpace(userInfo.Username) ? userInfo.Username.ToLower() : string.Empty;
                 //only show message to default users
                 if ("admin".Equals(usernameLower) || "host".Equals(usernameLower))
                 {
