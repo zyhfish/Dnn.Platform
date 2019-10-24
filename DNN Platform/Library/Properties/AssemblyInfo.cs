@@ -34,7 +34,19 @@ using DotNetNuke.Application;
 // Review the values of the assembly attributes
 
 [assembly: AssemblyTitle("DotNetNuke")]
-[assembly: AssemblyDescription("Open Source Web Application Framework")]
+[assembly: AssemblyDescription(@"
+Open Source Web Application Framework
+Patches contains:
+5/2/2019: merge the changes from released version which fix issues around export/import area (#)
+5/8/2019: do not export packages when the ""Include Extensions"" options is disabled (#)
+5/9/2019: match the destination page with correct culture code checking during import process (#)
+7/3/2019: make sure the import process running completely and handled the modules has wrong deleted flag. (#619)
+8/14/2019: export themes will be hang up if there have too many files in the themes folder (#1057)
+8/28/2019: url write mapped to wrong page in different portal. (#892,#1142)
+9/2/2019: avoid null reference exception when call to Globals.LinkClick method. (#922)
+9/17/2019: enable upload empty files (#1222)
+9/24/2019: fix error during delete a site process (#)
+")]
 [assembly: CLSCompliant(true)]
 
 [assembly: AssemblyStatus(ReleaseMode.Stable)]
