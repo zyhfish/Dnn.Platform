@@ -174,23 +174,29 @@ namespace DotNetNuke.Common.Utilities
         /// <returns>true if HTTPS or if HTTP with an SSL offload header value, false otherwise</returns>
         public static bool IsSecureConnectionOrSslOffload(HttpRequest request)
         {
-            if (request.IsSecureConnection)
-            {
-                return true;
-            }
-            string ssloffloadheader = HostController.Instance.GetString("SSLOffloadHeader", "");
+            var portalSettings = PortalController.Instance.GetCurrentPortalSettings();
+            return request.IsSecureConnection || (IsSslOffloadEnabled(request) && portalSettings.ActiveTab.IsSecure);
+        }
+
+        public static bool IsSslOffloadEnabled(HttpRequest request)
+        {
+            var ssloffloadheader = HostController.Instance.GetString("SSLOffloadHeader", "");
+
             //if the ssloffloadheader variable has been set check to see if a request header with that type exists
             if (!string.IsNullOrEmpty(ssloffloadheader))
             {
-                string ssloffload = request.Headers[ssloffloadheader];
-                if (!string.IsNullOrEmpty(ssloffload))
+                var ssloffloadValue = string.Empty;
+                if (ssloffloadheader.Contains(":"))
                 {
-                    PortalSettings portalSettings = PortalController.Instance.GetCurrentPortalSettings();
-                    if (portalSettings.ActiveTab.IsSecure)
-                    {
+                    var settingParts = ssloffloadheader.Split(':');
+                    ssloffloadheader = settingParts[0];
+                    ssloffloadValue = settingParts[1];
+                }
+
+                string ssloffload = request.Headers[ssloffloadheader];
+                if (!string.IsNullOrEmpty(ssloffload) && (string.IsNullOrWhiteSpace(ssloffloadValue) || ssloffloadValue == ssloffload))
+                {
                         return true;
-                    }
-                    
                 }
             }
             return false;
